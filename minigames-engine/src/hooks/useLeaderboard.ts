@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchTop10, type LeaderboardEntry } from '../lib/score';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { fetchTop10, type LeaderboardEntry } from '../lib/score.ts';
+import { isSupabaseConfigured } from '../lib/supabase.ts';
 
 export type LeaderboardStatus = 'offline' | 'loading' | 'ready' | 'error';
 

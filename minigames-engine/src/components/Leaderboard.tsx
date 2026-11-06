@@ -1,5 +1,5 @@
-import type { LeaderboardEntry } from '../lib/score';
-import type { LeaderboardStatus } from '../hooks/useLeaderboard';
+import type { LeaderboardEntry } from '../lib/score.ts';
+import type { LeaderboardStatus } from '../hooks/useLeaderboard.ts';
 
 interface LeaderboardProps {
   entries: LeaderboardEntry[];

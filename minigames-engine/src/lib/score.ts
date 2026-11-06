@@ -1,4 +1,4 @@
-import { getSupabase } from './supabase';
+import { getSupabase } from './supabase.ts';
 
 export interface LeaderboardEntry {
   rank: number;

@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useLeaderboard } from '../hooks/useLeaderboard';
-import { getLocalBest, getSavedNickname, saveLocalBest, submitScore } from '../lib/score';
-import { isSupabaseConfigured } from '../lib/supabase';
-import { Leaderboard } from './Leaderboard';
-import { ShareButton } from './ShareButton';
+import { useLeaderboard } from '../hooks/useLeaderboard.ts';
+import { getLocalBest, getSavedNickname, saveLocalBest, submitScore } from '../lib/score.ts';
+import { isSupabaseConfigured } from '../lib/supabase.ts';
+import { Leaderboard } from './Leaderboard.tsx';
+import { ShareButton } from './ShareButton.tsx';
 
 interface ScoreResultProps {
   slug: string;

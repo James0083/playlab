@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer } from 'react';
-import { createInitialState, gameSessionReducer, type GamePhase } from './gameSessionReducer';
+import { createInitialState, gameSessionReducer, type GamePhase } from './gameSessionReducer.ts';
 
 export type { GamePhase };
 

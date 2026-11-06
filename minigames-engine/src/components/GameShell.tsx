@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ErrorBoundary } from './ErrorBoundary.tsx';
 
 interface GameShellProps {
   title: string;
@@ -17,7 +18,9 @@ export function GameShell({ title, score, remainingMs, children }: GameShellProp
           {score != null && <strong>{score}점</strong>}
         </div>
       </header>
-      <main className="mg-stage">{children}</main>
+      <main className="mg-stage">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </main>
     </div>
   );
 }
