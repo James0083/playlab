@@ -87,16 +87,23 @@ interface ArcOptions {
   /** 시작·끝 각도(도). 0°는 오른쪽, 90°는 아래 */
   from: number;
   to: number;
+  /** 타원 자체를 중심 기준으로 이만큼(도, 시계 방향) 기울인다 */
+  rotate?: number;
 }
 
 const ARC_STEP_DEGREES = 5;
 
 /** 타원 호 위의 점들 */
-function arc({ cx, cy, rx, ry = rx, from, to }: ArcOptions): Point[] {
+function arc({ cx, cy, rx, ry = rx, from, to, rotate = 0 }: ArcOptions): Point[] {
   const count = Math.max(Math.ceil(Math.abs(to - from) / ARC_STEP_DEGREES), 1);
+  const tilt = (rotate * Math.PI) / 180;
   return Array.from({ length: count + 1 }, (_, i) => {
     const radians = ((from + ((to - from) * i) / count) * Math.PI) / 180;
-    return { x: cx + rx * Math.cos(radians), y: cy + ry * Math.sin(radians) };
+    const [x, y] = [rx * Math.cos(radians), ry * Math.sin(radians)];
+    return {
+      x: cx + x * Math.cos(tilt) - y * Math.sin(tilt),
+      y: cy + x * Math.sin(tilt) + y * Math.cos(tilt),
+    };
   });
 }
 
@@ -105,6 +112,18 @@ function closed(points: Point[]): Point[] {
   const [first] = points;
   return first ? [...points, first] : points;
 }
+
+/**
+ * 토끼 실루엣: 머리와 두 귀를 한 줄로 잇는다(바깥 윤곽만).
+ * 머리 아래쪽 → 왼쪽 귀 → 귀 사이 정수리 → 오른쪽 귀 → 다시 머리. 귀는 바깥으로 살짝 벌어진다.
+ */
+const RABBIT_HEAD = { cx: 50, cy: 63, rx: 16 };
+const RABBIT_OUTLINE = closed([
+  ...arc({ ...RABBIT_HEAD, from: -62, to: 242 }),
+  ...arc({ cx: 42, cy: 33, rx: 5.5, ry: 14, from: 100, to: 440, rotate: -12 }),
+  ...arc({ ...RABBIT_HEAD, from: 258, to: 282 }),
+  ...arc({ cx: 58, cy: 33, rx: 5.5, ry: 14, from: 100, to: 440, rotate: 12 }),
+]);
 
 /** 우산 갓: 위쪽 반원 + 아래쪽 물결 3개 */
 const UMBRELLA_CANOPY = [
@@ -118,6 +137,7 @@ const UMBRELLA_HANDLE = [
   ...arc({ cx: 45, cy: 74, rx: 5, from: 0, to: 180 }),
 ];
 
+/** 쉬운 것부터. 이 순서대로 해금된다. 우산은 물결 3개와 J자 손잡이(열린 선)가 있어 가장 어렵다 */
 export const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
   {
     id: 'circle',
@@ -142,7 +162,7 @@ export const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
   {
     id: 'square',
     name: '네모',
-    stars: 3,
+    stars: 2,
     baseScore: 300,
     strokes: [
       closed([
@@ -154,17 +174,10 @@ export const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
     ],
   },
   {
-    id: 'umbrella',
-    name: '우산',
-    stars: 4,
-    baseScore: 500,
-    strokes: [UMBRELLA_CANOPY, UMBRELLA_HANDLE],
-  },
-  {
     id: 'house',
     name: '집',
-    stars: 4,
-    baseScore: 500,
+    stars: 3,
+    baseScore: 400,
     strokes: [
       closed([
         { x: 50, y: 24 },
@@ -177,16 +190,13 @@ export const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
       ]),
     ],
   },
+  { id: 'rabbit', name: '토끼', stars: 4, baseScore: 600, strokes: [RABBIT_OUTLINE] },
   {
-    id: 'rabbit',
-    name: '토끼',
+    id: 'umbrella',
+    name: '우산',
     stars: 5,
     baseScore: 800,
-    strokes: [
-      arc({ cx: 50, cy: 62, rx: 16, from: 0, to: 360 }), // 얼굴
-      arc({ cx: 42, cy: 33, rx: 5, ry: 13, from: 0, to: 360 }), // 왼쪽 귀
-      arc({ cx: 58, cy: 33, rx: 5, ry: 13, from: 0, to: 360 }), // 오른쪽 귀
-    ],
+    strokes: [UMBRELLA_CANOPY, UMBRELLA_HANDLE],
   },
 ];
 
@@ -201,7 +211,7 @@ export function buildShape(definition: ShapeDefinition): Shape {
   };
 }
 
-/** 쉬운 순서대로. 이 순서로 해금된다 */
+/** SHAPE_DEFINITIONS에 체크포인트와 선분을 붙인 것 */
 export const SHAPES: readonly Shape[] = SHAPE_DEFINITIONS.map(buildShape);
 
 export function getShape(index: number): Shape {

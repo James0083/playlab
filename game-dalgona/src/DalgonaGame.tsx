@@ -22,6 +22,7 @@ import {
   finalScore,
   isBroken,
   isComplete,
+  nextShapeIndex,
   parseUnlockedCount,
   precisionOf,
   TIME_LIMIT_MS,
@@ -137,6 +138,12 @@ export function DalgonaGame() {
     if (trace.current) drawTrace(boardElements.current, { trace: trace.current, needle: null });
   };
 
+  const nextIndex = nextShapeIndex({
+    isComplete: outcome === 'complete',
+    index: shapeIndex,
+    total: SHAPES.length,
+  });
+
   // 모양 선택 화면에서는 홈으로, 그 외(카운트다운·플레이·결과)에서는 모양 선택으로 돌아간다
   const handleBack = phase === 'idle' ? goHome : session.reset;
 
@@ -167,7 +174,11 @@ export function DalgonaGame() {
           score={session.score}
           headline={HEADLINES[outcome ?? 'timeout']}
           metadata={{ shape: shape.id, cracks: crackPoints.length, precision }}
-          onRestart={session.reset}
+          onRestart={() => handleSelect(nextIndex)}
+          restartLabel={
+            nextIndex === shapeIndex ? '다시 하기' : `다음: ${getShape(nextIndex).name}`
+          }
+          secondaryAction={{ label: '모양 고르기', onClick: session.reset }}
         />
       )}
     </GameShell>

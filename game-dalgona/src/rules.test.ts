@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { finalScore, MAX_SCORE, parseUnlockedCount, unlockAfterClear } from './rules.ts';
+import {
+  finalScore,
+  MAX_SCORE,
+  nextShapeIndex,
+  parseUnlockedCount,
+  unlockAfterClear,
+} from './rules.ts';
 import { getShape } from './shapes.ts';
 import { startTrace } from './trace.ts';
 
@@ -17,7 +23,7 @@ test('정확도가 0이면 절반, 금 하나당 15%씩 깎인다', () => {
   assert.equal(finalScore(square, cracked), 210);
 });
 
-test('최고 점수는 토끼 기준 점수 (마이그레이션 max_score와 같아야 함)', () => {
+test('최고 점수는 우산 기준 점수 (마이그레이션 max_score와 같아야 함)', () => {
   assert.equal(MAX_SCORE, 800);
 });
 
@@ -33,4 +39,10 @@ test('모양을 완성하면 다음 모양이 열리고, 이미 연 것은 줄�
   assert.equal(unlockAfterClear(1, 0, 6), 2);
   assert.equal(unlockAfterClear(4, 0, 6), 4);
   assert.equal(unlockAfterClear(6, 5, 6), 6);
+});
+
+test('결과 화면 주 버튼: 완성하면 다음 모양, 실패하거나 마지막 모양이면 같은 모양', () => {
+  assert.equal(nextShapeIndex({ isComplete: true, index: 1, total: 6 }), 2);
+  assert.equal(nextShapeIndex({ isComplete: false, index: 1, total: 6 }), 1);
+  assert.equal(nextShapeIndex({ isComplete: true, index: 5, total: 6 }), 5);
 });

@@ -5,8 +5,11 @@ import { CRACK_DISTANCE, type TraceState } from './trace.ts';
 export const TIME_LIMIT_MS = 60_000;
 /** 금이 이만큼 가면 깨진다 */
 export const MAX_CRACKS = 3;
-/** 체크포인트를 이 비율 이상 긁으면 완성. 100%를 요구하면 마지막 한 점을 찾느라 답답해진다 */
-export const COMPLETE_RATIO = 0.97;
+/**
+ * 체크포인트를 모두 긁어야 완성. 예전 97%는 끝까지 긁기 전에 완성되는 문제가 있었다.
+ * 체크포인트는 바늘이 선 위로 실제 지나간 자리만 인정하므로(trace.ts) 흰 선이 다 이어지면 완성된다.
+ */
+export const COMPLETE_RATIO = 1;
 /** 금 하나당 점수 감점 비율 */
 const CRACK_PENALTY = 0.15;
 
@@ -35,7 +38,7 @@ export function finalScore(shape: Shape, trace: TraceState): number {
   return Math.round(shape.baseScore * precisionFactor * crackFactor);
 }
 
-/** 이론상 최고 점수(가장 어려운 모양을 완벽하게). Supabase games.max_score와 같아야 한다 */
+/** 이론상 최고 점수(가장 어려운 우산을 완벽하게). Supabase games.max_score와 같아야 한다 */
 export const MAX_SCORE = Math.max(...SHAPES.map((shape) => shape.baseScore));
 
 /** 저장된 해금 수를 읽는다. 없거나 이상한 값이면 첫 모양만 연다 */
@@ -48,4 +51,17 @@ export function parseUnlockedCount(stored: string | null, total: number): number
 /** clearedIndex 번째 모양을 완성했을 때 새 해금 수. 다음 모양이 열린다 */
 export function unlockAfterClear(unlocked: number, clearedIndex: number, total: number): number {
   return Math.min(Math.max(unlocked, clearedIndex + 2), total);
+}
+
+/** 결과 화면 주 버튼으로 시작할 모양. 완성했고 다음 모양이 있으면 다음 모양, 아니면 같은 모양을 다시 한다 */
+export function nextShapeIndex({
+  isComplete,
+  index,
+  total,
+}: {
+  isComplete: boolean;
+  index: number;
+  total: number;
+}): number {
+  return isComplete && index + 1 < total ? index + 1 : index;
 }

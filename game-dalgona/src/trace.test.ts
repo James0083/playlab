@@ -75,3 +75,23 @@ test('윤곽선 위에서 가장 가까운 지점으로 투영한다 (긁은 자
   assert.ok(Math.abs(nearest.distance - 3) < 0.1);
   assert.ok(Math.abs(nearest.point.x - 74) < 0.1);
 });
+
+test('끝까지 긁기 전에는 완성되지 않는다 (마지막 5% 남김)', () => {
+  const count = circle.checkpoints.length;
+  const almost = circle.checkpoints.slice(0, Math.floor(count * 0.95));
+  assert.equal(isComplete(drag(circle, almost)), false);
+});
+
+test('바늘 앞쪽의 아직 지나가지 않은 체크포인트는 긁은 것으로 치지 않는다', () => {
+  const trace = drag(circle, circle.checkpoints.slice(0, 10));
+  assert.ok(trace.visitedCount <= 11, `긁힌 체크포인트 ${trace.visitedCount}개`);
+});
+
+test('선에서 조금(1단위) 안쪽으로 비켜 긁어도 모서리까지 따라가면 완성된다', () => {
+  const square = getShape(2);
+  const inset = square.checkpoints.map(({ x, y }) => ({
+    x: x + Math.sign(50 - x),
+    y: y + Math.sign(50 - y),
+  }));
+  assert.ok(isComplete(drag(square, inset)));
+});

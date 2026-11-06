@@ -6,8 +6,13 @@ import { closestPointOnSegment, distance, lerp, type Point, type Shape } from '.
 export const CRACK_DISTANCE = 5;
 /** 선에 이만큼 다시 가까워져야 "돌아왔다"고 본다. 한 번 벗어난 것으로 금이 여러 번 가지 않게 한다 */
 const RETURN_DISTANCE = 3;
-/** 바늘이 체크포인트에서 이 거리 안을 지나면 긁은 것으로 본다 */
+/** 바늘이 선에서 이 거리 안에 있으면 선을 긁고 있는 것으로 본다(손가락 오차 허용) */
 export const VISIT_RADIUS = 3.5;
+/**
+ * 바늘 위치를 선 위로 옮긴 지점에서 이 거리 안의 체크포인트만 긁은 것으로 친다.
+ * 바늘 주변을 넓게 인정하면 아직 지나가지 않은 앞쪽까지 긁힌 것이 되어 끝까지 긁기 전에 완성된다.
+ */
+const SCRAPE_RADIUS = 1.5;
 /** 이동 경로를 이 간격으로 쪼개 검사한다. 빠르게 그어 체크포인트나 이탈을 건너뛰지 못하게 한다 */
 const SAMPLE_STEP = 1;
 
@@ -75,7 +80,8 @@ export function traceMove(
 
 /** 지점 하나를 검사해 trace를 직접 고친다(traceMove가 만든 복사본에만 쓴다) */
 function applySample(trace: TraceState, shape: Shape, point: Point): void {
-  const offset = distanceToShape(shape, point);
+  const nearest = nearestOnShape(shape, point);
+  const offset = nearest.distance;
   trace.deviationTotal += Math.min(offset, CRACK_DISTANCE);
   trace.sampleCount += 1;
 
@@ -87,12 +93,13 @@ function applySample(trace: TraceState, shape: Shape, point: Point): void {
     trace.isOffPath = false;
   }
 
-  if (offset <= VISIT_RADIUS) markVisited(trace, shape, point);
+  if (offset <= VISIT_RADIUS) markVisited(trace, shape, nearest.point);
 }
 
-function markVisited(trace: TraceState, shape: Shape, point: Point): void {
+/** 선 위의 지점 scraped 근처 체크포인트를 긁은 것으로 표시한다 */
+function markVisited(trace: TraceState, shape: Shape, scraped: Point): void {
   shape.checkpoints.forEach((checkpoint, i) => {
-    if (!trace.visited[i] && distance(checkpoint, point) <= VISIT_RADIUS) {
+    if (!trace.visited[i] && distance(checkpoint, scraped) <= SCRAPE_RADIUS) {
       trace.visited[i] = true;
       trace.visitedCount += 1;
     }
