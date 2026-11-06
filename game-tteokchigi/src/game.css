@@ -1,10 +1,29 @@
+:root {
+  /* 플레이 영역 배경: 따뜻한 실내 벽 → 나무 바닥 */
+  --tt-wall: #f3e6cf;
+  --tt-floor: #d9b98c;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tt-wall: #2e2419;
+    --tt-floor: #4a3826;
+  }
+}
+
 .tt-field {
   position: relative;
   width: 100%;
-  height: 60vh;
+  height: 62vh;
+  min-height: 360px;
+  padding: 0;
   border: 0;
   border-radius: 16px;
-  background: var(--mg-surface);
+  background: linear-gradient(
+    to bottom,
+    var(--tt-wall) 0%,
+    var(--tt-wall) 62%,
+    var(--tt-floor) 100%
+  );
   color: inherit;
   font: inherit;
   touch-action: manipulation;
@@ -13,35 +32,35 @@
   cursor: pointer;
   overflow: hidden;
 }
-.tt-pestle {
+.tt-scene {
   position: absolute;
-  left: 50%;
-  bottom: 72px;
-  width: 40px;
-  height: 120px;
-  margin-left: -20px;
-  border-radius: 12px;
-  background: var(--mg-accent);
-  will-change: transform;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
-.tt-mochi {
-  position: absolute;
-  left: 50%;
-  bottom: 16px;
-  width: 160px;
-  height: 56px;
-  margin-left: -80px;
-  border-radius: 50%;
-  background: var(--mg-border);
+
+/* 맞히면 떡이 눌렸다가 돌아온다(아랫면 기준) */
+.tt-mochi-hit {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: tt-squish 200ms ease-out;
 }
+/* 떡가루: 떡 윗면에서 사방으로 튄다 */
+.tt-puff {
+  fill: #fffdf6;
+  animation: tt-puff 450ms ease-out forwards;
+}
+
+/* 판정 문구와 속도 알림은 들어 올린 떡메(위)와 절구(아래) 사이 빈 공간에 띄운다 */
 .tt-judgement {
   position: absolute;
-  top: 24px;
+  top: 46%;
   left: 0;
   right: 0;
   text-align: center;
   font-size: 32px;
   font-weight: 800;
+  text-shadow: 0 2px 0 var(--mg-bg);
   animation: tt-pop 400ms ease-out both;
 }
 .tt-judgement-perfect {
@@ -51,11 +70,11 @@
   color: var(--mg-muted);
 }
 
-/* よーい 말풍선: 절굿공이가 올라가는 동안 한 글자씩 늘어나고, 정점에서 강조된다 */
+/* よーい 말풍선: 떡메가 내려오는 동안 한 글자씩 늘어나고, 떡을 치는 순간 강조된다 */
 .tt-call {
   position: absolute;
-  top: 28%;
-  right: calc(50% + 36px);
+  top: 30%;
+  left: 12px;
   padding: 8px 14px;
   border: 2px solid var(--mg-text);
   border-radius: 16px;
@@ -63,14 +82,15 @@
   font-size: 24px;
   font-weight: 800;
   white-space: nowrap;
+  box-shadow: 0 4px 0 rgb(0 0 0 / 0.15);
   opacity: 0;
   transform: scale(0.8);
-  transform-origin: 100% 100%;
+  transform-origin: 0 100%;
   transition:
     opacity 80ms,
     transform 80ms;
 }
-/* 말풍선 꼬리: 절굿공이 쪽(오른쪽 아래)을 가리킨다 */
+/* 말풍선 꼬리: 떡 쪽(오른쪽 아래)을 가리킨다 */
 .tt-call::after {
   content: '';
   position: absolute;
@@ -96,7 +116,7 @@
 /* BPM이 오를 때 잠깐 뜨는 알림 */
 .tt-speed-up {
   position: absolute;
-  top: 72px;
+  top: 56%;
   left: 0;
   right: 0;
   text-align: center;
@@ -108,12 +128,6 @@
 .tt-speed-up-visible {
   opacity: 1;
   animation: tt-pop 400ms ease-out both;
-}
-
-/* 맞히면 떡이 눌렸다가 돌아온다 */
-.tt-mochi-hit {
-  transform-origin: 50% 100%;
-  animation: tt-squish 180ms ease-out;
 }
 
 @keyframes tt-pop {
@@ -129,8 +143,21 @@
   }
 }
 @keyframes tt-squish {
-  40% {
-    transform: scale(1.15, 0.7);
+  35% {
+    transform: scale(1.12, 0.72);
+  }
+  70% {
+    transform: scale(0.97, 1.04);
+  }
+}
+@keyframes tt-puff {
+  from {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy));
   }
 }
 
@@ -140,9 +167,39 @@
   .tt-speed-up-visible {
     animation: none;
   }
+  .tt-puff {
+    display: none;
+  }
   .tt-call,
   .tt-call-visible,
   .tt-call-peak {
     transform: none;
   }
+}
+
+/* 시작 화면·카운트다운: 장면 위에 안내와 버튼을 겹친다 */
+.tt-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  /* 들어 올린 떡메(위)와 절구(아래) 사이 빈 공간에 놓는다 */
+  padding: 30% 0 20%;
+}
+.tt-guide {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mg-bg) 85%, transparent);
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* 시작 화면 미리보기는 눌러도 반응하지 않는다 */
+div.tt-field {
+  cursor: default;
 }

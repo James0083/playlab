@@ -1,7 +1,7 @@
 import { scheduleNoise, scheduleTone } from '@minigames/engine';
 
 // 배경음악은 박자표(beats)에 맞춰 합성한다. BPM이 오르면 음악도 같이 빨라진다.
-// 정점(박자) = 북 "동", 바닥(반박자) = 북 가장자리 "딱". 북소리가 곧 탭 타이밍이다.
+// 떡을 치는 순간(박자) = 북 "동", 떡메가 가장 높을 때(반박자) = 북 가장자리 "딱". 북소리가 곧 탭 타이밍이다.
 
 export type MusicVoice = 'don' | 'donAccent' | 'ka' | 'melody';
 

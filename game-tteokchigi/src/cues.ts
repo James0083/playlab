@@ -1,6 +1,6 @@
 import { bpmAt, BPM_STEP_MS, nearestBeatIndex, PERFECT_MS } from './rules.ts';
 
-/** 떡을 칠 때 외치는 소리. 절굿공이가 올라가는 동안 한 글자씩 드러난다. */
+/** 떡을 칠 때 외치는 소리. 떡메가 내려오는 동안 한 글자씩 드러난다. */
 export const CALL = 'よーい';
 
 export interface CallState {
@@ -14,8 +14,8 @@ const HIDDEN: CallState = { text: '', isPeak: false };
 
 /**
  * 지금 시각의 말풍선 상태.
- * 절굿공이가 바닥에서 올라가기 시작하면 "よ" → "よー" → "よーい"로 늘어나고,
- * 정점 전후 PERFECT 구간에서는 "よーい!"가 된다. 내려가는 동안은 숨긴다.
+ * 떡메가 꼭대기에서 내려오기 시작하면 "よ" → "よー" → "よーい"로 늘어나고,
+ * 떡을 치는 순간 전후 PERFECT 구간에서는 "よーい!"가 된다. 떡메를 들어 올리는 동안은 숨긴다.
  */
 export function callAt(beats: readonly number[], elapsedMs: number): CallState {
   const index = nearestBeatIndex(beats, elapsedMs);
@@ -25,9 +25,9 @@ export function callAt(beats: readonly number[], elapsedMs: number): CallState {
   if (Math.abs(elapsedMs - beat) <= PERFECT_MS) return { text: `${CALL}!`, isPeak: true };
   if (elapsedMs > beat) return HIDDEN;
 
-  // 가장 가까운 박자보다 앞이면 올라가는 중이다. 바닥(이전 박자와의 중간)에서 출발한다.
-  const bottom = ((beats[index - 1] ?? 0) + beat) / 2;
-  const progress = Math.max((elapsedMs - bottom) / (beat - bottom), 0);
+  // 가장 가까운 박자보다 앞이면 내려오는 중이다. 꼭대기(이전 박자와의 중간)에서 출발한다.
+  const top = ((beats[index - 1] ?? 0) + beat) / 2;
+  const progress = Math.max((elapsedMs - top) / (beat - top), 0);
   const shown = Math.max(Math.ceil(progress * CALL.length), 1);
   return { text: CALL.slice(0, shown), isPeak: false };
 }

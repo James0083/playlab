@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   bpmAt,
+  idleBeatsAt,
   judge,
   MAX_SCORE,
   nearestBeatIndex,
-  pestleHeight,
+  malletHeight,
   POINTS,
   scheduleBeats,
 } from './rules.ts';
@@ -40,12 +41,39 @@ test('가장 가까운 박자를 찾는다', () => {
   assert.equal(nearestBeatIndex([1000, 2000, 3000], 9000), 2);
 });
 
-test('절굿공이는 박자에 정점, 박자 사이 중간에 바닥이다', () => {
-  assert.equal(pestleHeight([1000, 2000], 1000), 1);
-  assert.equal(pestleHeight([1000, 2000], 1500), 0);
+test('떡메는 박자에 떡에 닿고(0), 박자 사이 중간에 가장 높다(1)', () => {
+  const at = (elapsedMs: number) => malletHeight([1000, 2000], { elapsedMs, lastStrikeMs: null });
+  assert.equal(at(1000), 0);
+  assert.equal(at(1500), 1);
+});
+
+test('떡메는 떡에 가까울수록 빠르다 (PERFECT 구간 밖에서는 눈에 띄게 떠 있다)', () => {
+  const at = (elapsedMs: number) => malletHeight([1000, 2000], { elapsedMs, lastStrikeMs: null });
+  // 박자 120ms 전(PERFECT 범위 밖)에는 떡메가 최고 높이의 40% 이상 떠 있어야 한다
+  assert.ok(at(880) > 0.4);
+  // 같은 시간(100ms) 동안 떡 근처에서 움직이는 거리가 꼭대기 근처보다 크다
+  assert.ok(at(1100) - at(1000) > at(1500) - at(1400));
+});
+
+test('탭한 직후에는 박자와 관계없이 떡메가 떡에 닿아 있다', () => {
+  const beats = [1000, 2000];
+  assert.equal(malletHeight(beats, { elapsedMs: 1500, lastStrikeMs: 1450 }), 0);
+  assert.equal(malletHeight(beats, { elapsedMs: 1500, lastStrikeMs: 1300 }), 1);
 });
 
 test('최고 점수는 모든 박자를 PERFECT로 맞힌 점수다 (마이그레이션 max_score와 같아야 함)', () => {
   assert.equal(MAX_SCORE, scheduleBeats().length * POINTS.PERFECT);
   assert.equal(MAX_SCORE, 144);
+});
+
+test('탭 없이 지나간 박자를 센다 (판정 구간이 끝나야 지나간 것)', () => {
+  const beats = [1000, 2000, 3000, 4000];
+  assert.equal(idleBeatsAt(beats, { elapsedMs: 1100, lastTapMs: null }), 0); // 아직 GOOD 구간 안
+  assert.equal(idleBeatsAt(beats, { elapsedMs: 3300, lastTapMs: null }), 3);
+});
+
+test('마지막 탭 이후의 박자만 센다. 박자 직전에 친 탭은 그 박자를 시도한 것으로 본다', () => {
+  const beats = [1000, 2000, 3000, 4000];
+  assert.equal(idleBeatsAt(beats, { elapsedMs: 4300, lastTapMs: 1950 }), 2); // 3000, 4000
+  assert.equal(idleBeatsAt(beats, { elapsedMs: 4300, lastTapMs: 1500 }), 3); // 2000, 3000, 4000
 });

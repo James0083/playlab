@@ -14,7 +14,7 @@ export const GAMES: Game[] = [
     slug: 'tteokchigi',
     name: '떡치기',
     emoji: '🔨',
-    description: '정점에서 타이밍 맞춰 탭',
+    description: '떡메가 떡에 닿는 순간 탭',
     origin: 'https://game-tteokchigi.pages.dev',
     status: 'coming-soon',
   },
