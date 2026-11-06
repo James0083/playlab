@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 
 export type MotionStatus = 'unsupported' | 'needs-permission' | 'granted' | 'denied';
 
@@ -26,8 +26,8 @@ function initialStatus(): MotionStatus {
  */
 export function useDeviceMotion(onSample: (sample: MotionSample) => void, enabled = true) {
   const [status, setStatus] = useState<MotionStatus>(initialStatus);
-  const callback = useRef(onSample);
-  callback.current = onSample;
+  // 항상 최신 onSample을 호출하되, onSample이 바뀌어도 이벤트를 다시 구독하지 않는다.
+  const emitSample = useEffectEvent(onSample);
 
   const requestPermission = useCallback(async () => {
     const motion = DeviceMotionEvent as unknown as PermissionCapable;
@@ -55,7 +55,7 @@ export function useDeviceMotion(onSample: (sample: MotionSample) => void, enable
     };
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.accelerationIncludingGravity;
-      callback.current({
+      emitSample({
         acceleration: { x: a?.x ?? 0, y: a?.y ?? 0, z: a?.z ?? 0 },
         orientation: { ...orientation },
         timestamp: e.timeStamp,

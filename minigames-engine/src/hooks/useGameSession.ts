@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer } from 'react';
+import { createInitialState, gameSessionReducer, type GamePhase } from './gameSessionReducer';
 
-export type GamePhase = 'idle' | 'countdown' | 'playing' | 'result';
+export type { GamePhase };
 
 export interface GameSessionOptions {
   /** 플레이 시간(ms). null이면 무한 콤보 방식으로, end()를 호출해야 끝난다. */
@@ -21,64 +22,44 @@ export interface GameSession {
   reset: () => void;
 }
 
+const DEFAULT_COUNTDOWN_MS = 3_000;
+/** 남은 시간 표시 갱신 주기. 화면에는 초 단위로만 보이므로 매 프레임 갱신할 필요가 없다. */
 const TICK_MS = 100;
 
 export function useGameSession({
   durationMs,
-  countdownMs = 3000,
+  countdownMs = DEFAULT_COUNTDOWN_MS,
 }: GameSessionOptions): GameSession {
-  const [phase, setPhase] = useState<GamePhase>('idle');
-  const [score, setScore] = useState(0);
-  const [remainingMs, setRemainingMs] = useState<number | null>(durationMs);
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const phaseRef = useRef(phase);
-  phaseRef.current = phase;
-
-  const start = useCallback(() => {
-    setScore(0);
-    setRemainingMs(durationMs);
-    setStartedAt(null);
-    setPhase('countdown');
-  }, [durationMs]);
-
-  const addScore = useCallback((delta: number) => {
-    if (phaseRef.current === 'playing') setScore((s) => s + delta);
-  }, []);
-
-  const end = useCallback(() => {
-    setStartedAt(null);
-    setPhase('result');
-  }, []);
-
-  const reset = useCallback(() => {
-    setScore(0);
-    setRemainingMs(durationMs);
-    setStartedAt(null);
-    setPhase('idle');
-  }, [durationMs]);
+  const [state, dispatch] = useReducer(gameSessionReducer, durationMs, createInitialState);
+  const { phase } = state;
 
   useEffect(() => {
     if (phase !== 'countdown') return;
-    const id = setTimeout(() => {
-      setStartedAt(performance.now());
-      setPhase('playing');
-    }, countdownMs);
+    const id = setTimeout(() => dispatch({ type: 'begin', now: performance.now() }), countdownMs);
     return () => clearTimeout(id);
   }, [phase, countdownMs]);
 
   useEffect(() => {
-    if (phase !== 'playing' || durationMs === null || startedAt === null) return;
-    const id = setInterval(() => {
-      const left = durationMs - (performance.now() - startedAt);
-      if (left <= 0) {
-        setRemainingMs(0);
-        end();
-      } else {
-        setRemainingMs(left);
-      }
-    }, TICK_MS);
+    if (phase !== 'playing' || durationMs === null) return;
+    const id = setInterval(() => dispatch({ type: 'tick', now: performance.now() }), TICK_MS);
     return () => clearInterval(id);
-  }, [phase, durationMs, startedAt, end]);
+  }, [phase, durationMs]);
 
-  return { phase, score, remainingMs, startedAt, start, addScore, end, reset };
+  const actions = useMemo(
+    () => ({
+      start: () => dispatch({ type: 'start' }),
+      addScore: (delta: number) => dispatch({ type: 'addScore', delta }),
+      end: () => dispatch({ type: 'end' }),
+      reset: () => dispatch({ type: 'reset' }),
+    }),
+    [],
+  );
+
+  return {
+    phase,
+    score: state.score,
+    remainingMs: state.remainingMs,
+    startedAt: state.startedAt,
+    ...actions,
+  };
 }

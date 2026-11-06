@@ -46,12 +46,20 @@ export function saveLocalBest(slug: string, score: number): void {
   if (score > getLocalBest(slug)) write(bestKey(slug), String(score));
 }
 
-export async function submitScore(
-  slug: string,
-  nickname: string,
-  score: number,
-  metadata: Record<string, unknown> = {},
-): Promise<void> {
+export interface ScoreSubmission {
+  slug: string;
+  nickname: string;
+  score: number;
+  /** 게임별 추가 데이터(콤보, 완성도 등). 2KB 이하. */
+  metadata?: Record<string, unknown>;
+}
+
+export async function submitScore({
+  slug,
+  nickname,
+  score,
+  metadata = {},
+}: ScoreSubmission): Promise<void> {
   const supabase = await getSupabase();
   const { error } = await supabase.rpc('submit_score', {
     p_game_slug: slug,
@@ -68,5 +76,5 @@ export async function fetchTop10(slug: string): Promise<LeaderboardEntry[]> {
   const supabase = await getSupabase();
   const { data, error } = await supabase.rpc('get_top10', { p_game_slug: slug });
   if (error) throw error;
-  return (data ?? []) as LeaderboardEntry[];
+  return data;
 }

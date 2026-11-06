@@ -13,6 +13,12 @@ import {
 const SLUG = 'tteokchigi';
 const TITLE = '떡치기';
 const PESTLE_TRAVEL_PX = 180;
+/** 판정별 진동 패턴(ms). MISS는 짧게 두 번 끊어 실패 느낌을 준다. */
+const VIBRATION: Record<Judgement, number | number[]> = {
+  PERFECT: 40,
+  GOOD: 20,
+  MISS: [10, 30, 10],
+};
 
 export function TteokchigiGame() {
   const session = useGameSession({ durationMs: DURATION_MS });
@@ -38,7 +44,7 @@ export function TteokchigiGame() {
     return () => cancelAnimationFrame(frame);
   }, [phase, startedAt, beats]);
 
-  const onTap = () => {
+  const handleTap = () => {
     if (startedAt === null) return;
     const elapsed = performance.now() - startedAt;
     const index = nearestBeatIndex(beats, elapsed);
@@ -47,7 +53,7 @@ export function TteokchigiGame() {
     if (result !== 'MISS') usedBeats.current.add(index);
     session.addScore(POINTS[result]);
     setJudgement(result);
-    vibrate(result === 'PERFECT' ? 40 : result === 'GOOD' ? 20 : [10, 30, 10]);
+    vibrate(VIBRATION[result]);
   };
 
   return (
@@ -66,7 +72,7 @@ export function TteokchigiGame() {
       )}
       {phase === 'countdown' && <Countdown />}
       {phase === 'playing' && (
-        <button type="button" className="tt-field" aria-label="떡 치기" onPointerDown={onTap}>
+        <button type="button" className="tt-field" aria-label="떡 치기" onPointerDown={handleTap}>
           <span className="tt-judgement" role="status">
             {judgement}
           </span>

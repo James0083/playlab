@@ -3,7 +3,7 @@ import './game.css';
 import { configureSupabase } from '@minigames/engine';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { TteokchigiGame } from './tteokchigi-game';
+import { TteokchigiGame } from './TteokchigiGame';
 
 configureSupabase({
   url: import.meta.env.VITE_SUPABASE_URL,

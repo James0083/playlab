@@ -5,10 +5,13 @@ const liveRoutes = () =>
     GAMES.filter((g) => g.status === 'live').map((g) => [`/games/${g.slug}`, g.origin]),
   );
 
-/** Pages가 보낸 리다이렉트는 pages.dev 기준이므로 공개 경로로 되돌린다. */
-function rewriteLocation(location, targetUrl, origin, prefix, publicUrl) {
+/**
+ * Pages가 보낸 리다이렉트는 pages.dev 기준이므로 공개 경로로 되돌린다.
+ * 다른 사이트로 가는 리다이렉트는 그대로 둔다.
+ */
+function rewriteLocation(location, { targetUrl, prefix, publicUrl }) {
   const resolved = new URL(location, targetUrl);
-  if (resolved.origin !== new URL(origin).origin) return location;
+  if (resolved.origin !== targetUrl.origin) return location;
   return new URL(prefix + resolved.pathname + resolved.search + resolved.hash, publicUrl).href;
 }
 
@@ -36,7 +39,7 @@ export function createHandler(routes) {
         if (location) {
           response.headers.set(
             'location',
-            rewriteLocation(location, targetUrl, origin, prefix, url),
+            rewriteLocation(location, { targetUrl, prefix, publicUrl: url }),
           );
         }
         return response;

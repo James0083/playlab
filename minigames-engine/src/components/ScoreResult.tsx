@@ -23,17 +23,21 @@ export function ScoreResult({ slug, title, score, metadata, onRestart }: ScoreRe
 
   useEffect(() => saveLocalBest(slug, score), [slug, score]);
 
-  const onSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  const register = async () => {
     setSubmit('submitting');
     try {
-      await submitScore(slug, nickname.trim(), score, metadata);
+      await submitScore({ slug, nickname: nickname.trim(), score, metadata });
       setSubmit('done');
-      await refresh();
+      refresh();
     } catch (error) {
       console.error('[engine] 점수 저장 실패', error);
       setSubmit('error');
     }
+  };
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void register();
   };
 
   return (
@@ -44,7 +48,7 @@ export function ScoreResult({ slug, title, score, metadata, onRestart }: ScoreRe
       </p>
 
       {isSupabaseConfigured() && submit !== 'done' && (
-        <form className="mg-submit" onSubmit={onSubmit}>
+        <form className="mg-submit" onSubmit={handleSubmit}>
           <input
             aria-label="닉네임"
             placeholder="닉네임"

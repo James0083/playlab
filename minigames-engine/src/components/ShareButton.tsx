@@ -69,7 +69,7 @@ export function ShareButton({ title, score }: ShareButtonProps) {
 
   return (
     <>
-      <button type="button" className="mg-button mg-button-secondary" onClick={share}>
+      <button type="button" className="mg-button mg-button-secondary" onClick={() => void share()}>
         점수 공유
       </button>
       {failed && (

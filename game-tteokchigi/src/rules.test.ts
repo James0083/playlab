@@ -20,8 +20,10 @@ test('BPM은 10초마다 5씩 오른다', () => {
 test('박자는 시간 범위 안에서 증가하고 간격이 줄어든다', () => {
   const beats = scheduleBeats();
   assert.equal(beats[0], 1000);
-  assert.ok(beats.at(-1)! < 60_000);
-  assert.ok(beats.at(-1)! - beats.at(-2)! < beats[1]! - beats[0]!);
+  const [first, second] = [beats[0] ?? 0, beats[1] ?? 0];
+  const [beforeLast, last] = [beats.at(-2) ?? 0, beats.at(-1) ?? 0];
+  assert.ok(last < 60_000);
+  assert.ok(last - beforeLast < second - first);
 });
 
 test('가장 가까운 박자를 찾는다', () => {

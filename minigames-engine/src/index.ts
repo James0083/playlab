@@ -21,4 +21,5 @@ export {
   saveLocalBest,
   submitScore,
 } from './lib/score';
+export type { ScoreSubmission } from './lib/score';
 export type { LeaderboardEntry } from './lib/score';
