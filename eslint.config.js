@@ -63,6 +63,12 @@ export default tseslint.config(
     rules: { 'no-restricted-syntax': 'off' },
   },
 
+  // 터미널에서 실행하는 스크립트는 진행 상황을 출력해야 한다
+  {
+    files: ['scripts/**', '**/scripts/**'],
+    rules: { 'no-console': 'off' },
+  },
+
   // TS 프로젝트(tsconfig include)에 속하지 않는 JS·설정 파일은 타입 기반 규칙을 끈다
   { files: ['**/*.{js,mjs}', '**/*.config.ts'], ...tseslint.configs.disableTypeChecked },
 
