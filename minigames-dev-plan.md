@@ -130,10 +130,10 @@ run_worker_first = ["/games/*"]
 
 ## 레포 구성
 
-**모노레포 1개** (GitHub `James0083/minigames`, 비공개). 원래 계획의 게임별 독립 레포 대신 이 방식을 택했다.
+**모노레포 1개** (GitHub [`James0083/playlab`](https://github.com/James0083/playlab)). 원래 계획의 게임별 독립 레포 대신 이 방식을 택했다.
 
 ```
-minigames/                 ← pnpm workspace
+playlab/                   ← pnpm workspace
 ├── minigames-engine/      ← @minigames/engine (npm에 배포하지 않음, workspace:*로 참조)
 ├── minigames-home/        ← 홈 + 라우터 Worker
 ├── game-tteokchigi/

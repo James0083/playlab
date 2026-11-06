@@ -1,4 +1,4 @@
-# minigames
+# playlab
 
 james-playlab.com 미니게임 모노레포. 계획과 결정 사항은 [minigames-dev-plan.md](minigames-dev-plan.md)에 있습니다.
 
