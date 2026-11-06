@@ -1,0 +1,169 @@
+:root {
+  --dg-candy-light: #f6cf7e;
+  --dg-candy: #e0a84a;
+  --dg-candy-edge: #b77a22;
+  --dg-candy-rim: #8a5512;
+  --dg-line: #6b3f0e;
+  --dg-scraped: #fff3d6;
+  --dg-crack: #3a2108;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dg-candy-light: #e2b260;
+    --dg-candy: #c88d34;
+    --dg-candy-edge: #8f5c18;
+    --dg-candy-rim: #63390a;
+    --dg-line: #3f2407;
+    --dg-scraped: #ffe7b3;
+    --dg-crack: #1c0f03;
+  }
+}
+
+/* ---- 모양 선택 ---- */
+.dg-picker {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dg-shapes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dg-shape {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 4px;
+  border: 1px solid var(--mg-border);
+  border-radius: 12px;
+  background: var(--mg-surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.dg-shape:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.dg-shape svg {
+  width: 56px;
+  height: 56px;
+}
+.dg-shape polyline {
+  fill: none;
+  stroke: var(--mg-text);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.dg-shape-name {
+  font-weight: 700;
+}
+.dg-stars {
+  font-size: 12px;
+  color: var(--mg-accent);
+}
+
+/* ---- 달고나 판 ---- */
+.dg-board-wrap {
+  width: 100%;
+  max-width: 400px;
+}
+.dg-status {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.dg-board-frame {
+  position: relative;
+}
+/* 판이 바닥에 놓인 듯한 그림자 */
+.dg-board-frame::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -2%;
+  height: 14%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.35), transparent);
+}
+.dg-board {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  touch-action: none; /* 드래그가 스크롤·확대로 해석되지 않게 한다 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 눌러 찍은 홈: 밝은 선을 오른쪽 아래로 조금 밀어 파인 면의 반대쪽이 빛을 받는 것처럼 보이게 한다 */
+.dg-groove-light,
+.dg-groove-dark {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.dg-groove-light {
+  stroke: var(--dg-candy-light);
+  stroke-width: 1.4;
+  transform: translate(0.45px, 0.45px);
+}
+.dg-groove-dark {
+  stroke: var(--dg-line);
+  stroke-width: 0.9;
+  stroke-opacity: 0.85;
+}
+/* 긁은 자국: 바늘이 지나간 경로를 따라 이어지는 밝은 홈 */
+.dg-trail {
+  fill: none;
+  stroke: var(--dg-scraped);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dg-crack {
+  animation: dg-crack-in 150ms ease-out;
+}
+.dg-crack-edge,
+.dg-crack-gap {
+  fill: none;
+  stroke-linejoin: bevel;
+}
+.dg-crack-edge {
+  stroke: var(--dg-candy-light);
+  stroke-width: 1.6;
+  transform: translate(0.4px, 0.4px);
+}
+.dg-crack-gap {
+  stroke: var(--dg-crack);
+  stroke-width: 0.9;
+}
+.dg-needle {
+  opacity: 0;
+  pointer-events: none;
+}
+.dg-needle-visible {
+  opacity: 1;
+}
+
+@keyframes dg-crack-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-crack {
+    animation: none;
+  }
+}

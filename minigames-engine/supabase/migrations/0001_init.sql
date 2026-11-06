@@ -96,8 +96,9 @@ grant execute on function public.submit_score(text, uuid, text, int, jsonb) to a
 grant execute on function public.get_top10(text) to anon, authenticated;
 
 -- max_score: 떡치기는 game-tteokchigi/src/rules.ts의 MAX_SCORE(72박자 × PERFECT 2점)와 같아야 한다.
+-- 달고나는 game-dalgona/src/rules.ts의 MAX_SCORE(토끼 기준 점수 800)와 같아야 한다.
 -- 나머지 게임은 규칙이 정해지면 채운다(null이면 상한 검사를 하지 않는다).
 insert into public.games (slug, name, description, max_score) values
-  ('tteokchigi', '떡치기', '정점에서 타이밍 맞춰 탭', 144),
-  ('dalgona', '달고나 뽑기', '선을 벗어나지 않게 드래그', null),
+  ('tteokchigi', '떡치기', '떡메가 떡에 닿는 순간 탭', 144),
+  ('dalgona', '달고나 뽑기', '선을 벗어나지 않게 드래그', 800),
   ('bubble-tea', '버블티 흔들기', '넘치지 않게 폰 흔들기', null);
