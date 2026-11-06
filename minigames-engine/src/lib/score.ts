@@ -1,3 +1,4 @@
+import { readStorage as read, writeStorage as write } from './storage.ts';
 import { getSupabase } from './supabase.ts';
 
 export interface LeaderboardEntry {
@@ -9,23 +10,6 @@ export interface LeaderboardEntry {
 const PLAYER_KEY = 'minigames:player-id';
 const NICKNAME_KEY = 'minigames:nickname';
 const bestKey = (slug: string) => `minigames:best:${slug}`;
-
-// 사생활 보호 모드 등에서 localStorage 접근이 실패해도 게임은 계속되어야 한다.
-function read(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function write(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    /* 저장하지 못해도 플레이에는 영향이 없다 */
-  }
-}
 
 export function getPlayerId(): string {
   const existing = read(PLAYER_KEY);

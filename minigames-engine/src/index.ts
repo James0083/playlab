@@ -22,6 +22,8 @@ export {
 } from './lib/audio.ts';
 export type { NoiseOptions, ToneOptions } from './lib/audio.ts';
 export { createGameClock } from './lib/clock.ts';
+export { readStorage, writeStorage } from './lib/storage.ts';
+export { goHome } from './lib/navigation.ts';
 export type { AudioTimeSource, GameClock } from './lib/clock.ts';
 
 export { configureSupabase, isSupabaseConfigured } from './lib/supabase.ts';
