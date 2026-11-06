@@ -251,7 +251,7 @@ game-<slug>/
 ├── vite.config.ts        # base: '/games/<slug>/'
 ├── src/
 │   ├── main.tsx          # Supabase 설정 + 렌더링
-│   ├── <slug>-game.tsx   # 게임 화면
+│   ├── <Slug>Game.tsx    # 게임 화면 (예: TteokchigiGame.tsx)
 │   ├── rules.ts          # 판정·점수 규칙 (순수 함수, 테스트 대상)
 │   └── rules.test.ts
 ├── public/sounds/

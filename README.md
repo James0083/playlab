@@ -16,7 +16,10 @@ pnpm dev:game     # 엔진 빌드 후 떡치기 개발 서버
 pnpm test         # Worker 라우팅 + 떡치기 규칙
 pnpm typecheck
 pnpm build        # 엔진 → 홈/게임 순서로 빌드
+pnpm check        # 커밋 전: 포맷 검사 → lint → 타입 검사 → 테스트
 ```
+
+코딩 규칙은 [CONVENTIONS.md](CONVENTIONS.md)를 따릅니다.
 
 Supabase 없이도 동작합니다(로컬 최고기록만 사용). 연결하려면 `game-tteokchigi/.env.example`을 `.env`로 복사해 값을 채우고
 `minigames-engine/supabase/migrations/0001_init.sql`을 적용하세요.
