@@ -1,0 +1,4 @@
+.tt-field { position: relative; width: 100%; height: 60vh; border: 0; border-radius: 16px; background: var(--mg-surface); color: inherit; font: inherit; touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; overflow: hidden; }
+.tt-pestle { position: absolute; left: 50%; bottom: 72px; width: 40px; height: 120px; margin-left: -20px; border-radius: 12px; background: var(--mg-accent); will-change: transform; }
+.tt-mochi { position: absolute; left: 50%; bottom: 16px; width: 160px; height: 56px; margin-left: -80px; border-radius: 50%; background: var(--mg-border); }
+.tt-judgement { position: absolute; top: 24px; left: 0; right: 0; text-align: center; font-size: 32px; font-weight: 800; }

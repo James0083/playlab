@@ -1,0 +1,69 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+export type MotionStatus = 'unsupported' | 'needs-permission' | 'granted' | 'denied';
+
+export interface MotionSample {
+  /** 중력 포함 가속도(m/s²) */
+  acceleration: { x: number; y: number; z: number };
+  /** 기기 방향(도) */
+  orientation: { alpha: number; beta: number; gamma: number };
+  timestamp: number;
+}
+
+type PermissionCapable = { requestPermission?: () => Promise<'granted' | 'denied'> };
+
+function initialStatus(): MotionStatus {
+  if (typeof window === 'undefined' || !('DeviceMotionEvent' in window)) return 'unsupported';
+  const needsPrompt = typeof (DeviceMotionEvent as unknown as PermissionCapable).requestPermission === 'function';
+  return needsPrompt ? 'needs-permission' : 'granted';
+}
+
+/**
+ * DeviceMotion + DeviceOrientation 통합.
+ * iOS에서는 requestPermission()을 탭 같은 사용자 제스처 안에서 호출해야 한다.
+ * 데스크톱에서는 이벤트가 오지 않을 수 있으므로 게임 쪽에 대체 입력이 필요하다.
+ */
+export function useDeviceMotion(onSample: (sample: MotionSample) => void, enabled = true) {
+  const [status, setStatus] = useState<MotionStatus>(initialStatus);
+  const callback = useRef(onSample);
+  callback.current = onSample;
+
+  const requestPermission = useCallback(async () => {
+    const motion = DeviceMotionEvent as unknown as PermissionCapable;
+    const orientation = DeviceOrientationEvent as unknown as PermissionCapable;
+    if (typeof motion.requestPermission !== 'function') return;
+    try {
+      // 제스처가 유효한 동안 두 요청을 동시에 시작한다.
+      const results = await Promise.all([motion.requestPermission(), orientation.requestPermission?.() ?? 'granted']);
+      setStatus(results.every((r) => r === 'granted') ? 'granted' : 'denied');
+    } catch {
+      setStatus('denied');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || status !== 'granted') return;
+    const orientation = { alpha: 0, beta: 0, gamma: 0 };
+    const onOrientation = (e: DeviceOrientationEvent) => {
+      orientation.alpha = e.alpha ?? 0;
+      orientation.beta = e.beta ?? 0;
+      orientation.gamma = e.gamma ?? 0;
+    };
+    const onMotion = (e: DeviceMotionEvent) => {
+      const a = e.accelerationIncludingGravity;
+      callback.current({
+        acceleration: { x: a?.x ?? 0, y: a?.y ?? 0, z: a?.z ?? 0 },
+        orientation: { ...orientation },
+        timestamp: e.timeStamp,
+      });
+    };
+    window.addEventListener('deviceorientation', onOrientation);
+    window.addEventListener('devicemotion', onMotion);
+    return () => {
+      window.removeEventListener('deviceorientation', onOrientation);
+      window.removeEventListener('devicemotion', onMotion);
+    };
+  }, [enabled, status]);
+
+  return { status, requestPermission };
+}

@@ -1,0 +1,21 @@
+{
+  "name": "minigames-home",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "pnpm build && wrangler dev",
+    "deploy": "pnpm build && wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "wrangler": "4.152.0"
+  },
+  "packageManager": "pnpm@12.15.0"
+}

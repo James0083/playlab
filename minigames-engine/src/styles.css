@@ -1,0 +1,41 @@
+:root {
+  --mg-bg: #faf6ef;
+  --mg-surface: #ffffff;
+  --mg-text: #2a241c;
+  --mg-muted: #6f6557;
+  --mg-accent: #b4560b;
+  --mg-on-accent: #ffffff;
+  --mg-border: #e4dccf;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mg-bg: #1f1b16;
+    --mg-surface: #2b261f;
+    --mg-text: #f5efe6;
+    --mg-muted: #b5aa9a;
+    --mg-accent: #ffb454;
+    --mg-on-accent: #2a1a05;
+    --mg-border: #453d32;
+  }
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--mg-bg); color: var(--mg-text); font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', sans-serif; }
+.mg-shell { display: flex; flex-direction: column; min-height: 100%; max-width: 480px; margin: 0 auto; padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+.mg-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+.mg-title { margin: 0; font-size: 18px; }
+.mg-hud { display: flex; gap: 12px; font-variant-numeric: tabular-nums; }
+.mg-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.mg-countdown { font-size: 96px; font-weight: 800; color: var(--mg-accent); }
+.mg-button { min-height: 48px; padding: 0 20px; border: 0; border-radius: 12px; background: var(--mg-accent); color: var(--mg-on-accent); font: inherit; font-weight: 700; cursor: pointer; }
+.mg-button:disabled { opacity: .6; }
+.mg-button-secondary { background: var(--mg-surface); color: var(--mg-text); border: 1px solid var(--mg-border); }
+.mg-result { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.mg-score { margin: 0; font-size: 64px; font-weight: 800; }
+.mg-muted { margin: 0; color: var(--mg-muted); text-align: center; }
+.mg-submit { display: flex; gap: 8px; width: 100%; }
+.mg-submit input { flex: 1; min-width: 0; min-height: 48px; padding: 0 12px; border: 1px solid var(--mg-border); border-radius: 12px; background: var(--mg-surface); color: var(--mg-text); font-size: 16px; }
+.mg-leaderboard { width: 100%; margin: 0; padding: 0; list-style: none; }
+.mg-leaderboard li { display: grid; grid-template-columns: 32px 1fr auto; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--mg-border); }
+.mg-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }

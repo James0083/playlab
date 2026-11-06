@@ -1,0 +1,9 @@
+packages:
+  - minigames-engine
+  - minigames-home
+  - game-*
+# 게시 후 14일이 지나지 않은 버전은 설치하지 않는다(분 단위).
+minimumReleaseAge: 20160
+allowBuilds:
+  esbuild: false
+  workerd: false

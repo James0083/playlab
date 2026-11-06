@@ -1,0 +1,14 @@
+name = "minigames-router"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+# 홈 정적 파일은 Worker를 거치지 않아 일일 요청 한도를 쓰지 않는다.
+run_worker_first = ["/games/*"]
+
+# 도메인을 구매하고 Cloudflare에 추가한 뒤 주석을 해제한다.
+# [[routes]]
+# pattern = "james-playlab.com/*"
+# zone_name = "james-playlab.com"

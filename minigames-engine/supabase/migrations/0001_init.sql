@@ -1,0 +1,101 @@
+-- 게임 목록
+create table public.games (
+  slug        text primary key,
+  name        text not null,
+  description text,
+  active      boolean not null default true,
+  max_score   int check (max_score is null or max_score >= 0), -- 이론상 최고 점수. 초과 제출을 거부한다
+  created_at  timestamptz not null default now()
+);
+
+-- 점수 기록
+create table public.scores (
+  id          uuid primary key default gen_random_uuid(),
+  game_slug   text not null references public.games (slug),
+  player_id   uuid not null,  -- 익명 UUID (localStorage)
+  nickname    text not null check (char_length(nickname) between 1 and 12),
+  score       int not null check (score >= 0),
+  metadata    jsonb not null default '{}' check (pg_column_size(metadata) <= 2048),
+  created_at  timestamptz not null default now()
+);
+
+create index scores_rank_idx   on public.scores (game_slug, score desc);
+create index scores_recent_idx on public.scores (game_slug, created_at desc);
+create index scores_player_idx on public.scores (player_id, game_slug, created_at desc);
+
+-- RLS: 게임 목록은 읽기만 허용하고, scores는 직접 접근을 막아 아래 함수로만 다룬다.
+-- 주의: 클라이언트가 계산한 점수를 받는 구조라 위조를 완전히 막을 수는 없다.
+-- 여기서는 범위 검증과 빈도 제한으로 명백한 조작만 걸러낸다.
+alter table public.games enable row level security;
+alter table public.scores enable row level security;
+
+create policy games_read on public.games for select to anon, authenticated using (true);
+
+create function public.submit_score(
+  p_game_slug text,
+  p_player_id uuid,
+  p_nickname  text,
+  p_score     int,
+  p_metadata  jsonb default '{}'
+) returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_max int;
+begin
+  select g.max_score into v_max
+  from public.games g
+  where g.slug = p_game_slug and g.active;
+
+  if not found then
+    raise exception 'unknown game' using errcode = 'P0002';
+  end if;
+
+  if v_max is not null and p_score > v_max then
+    raise exception 'score out of range' using errcode = '22003';
+  end if;
+
+  if exists (
+    select 1 from public.scores s
+    where s.player_id = p_player_id
+      and s.game_slug = p_game_slug
+      and s.created_at > now() - interval '5 seconds'
+  ) then
+    raise exception 'too many submissions' using errcode = 'P0001';
+  end if;
+
+  insert into public.scores (game_slug, player_id, nickname, score, metadata)
+  values (p_game_slug, p_player_id, btrim(p_nickname), p_score, coalesce(p_metadata, '{}'));
+end;
+$$;
+
+-- 플레이어별 최고 기록 기준 Top 10. 한 사람이 순위를 독점하지 않는다.
+create function public.get_top10(p_game_slug text)
+returns table (rank bigint, nickname text, score int)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select row_number() over (order by b.score desc, b.created_at asc), b.nickname, b.score
+  from (
+    select distinct on (s.player_id) s.player_id, s.nickname, s.score, s.created_at
+    from public.scores s
+    where s.game_slug = p_game_slug
+    order by s.player_id, s.score desc, s.created_at asc
+  ) b
+  order by 1
+  limit 10;
+$$;
+
+revoke all on function public.submit_score(text, uuid, text, int, jsonb) from public;
+revoke all on function public.get_top10(text) from public;
+grant execute on function public.submit_score(text, uuid, text, int, jsonb) to anon, authenticated;
+grant execute on function public.get_top10(text) to anon, authenticated;
+
+insert into public.games (slug, name, description) values
+  ('tteokchigi', '떡치기', '정점에서 타이밍 맞춰 탭'),
+  ('dalgona', '달고나 뽑기', '선을 벗어나지 않게 드래그'),
+  ('bubble-tea', '버블티 흔들기', '넘치지 않게 폰 흔들기');
