@@ -10,7 +10,7 @@
     "dev": "pnpm build && wrangler dev",
     "deploy": "pnpm build && wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "node --test \"lib/**/*.test.ts\" \"*.test.js\""
   },
   "devDependencies": {
     "@types/node": "24.19.2",
