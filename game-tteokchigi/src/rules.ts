@@ -2,8 +2,10 @@ export const DURATION_MS = 60_000;
 /** 플랜에 시작 BPM이 없어 임시로 정한 값. 플레이테스트 후 조정한다. */
 export const BASE_BPM = 60;
 const BPM_STEP = 5;
-const BPM_STEP_MS = 10_000;
-const PERFECT_MS = 100;
+/** 이 간격(ms)마다 BPM이 BPM_STEP씩 오른다 */
+export const BPM_STEP_MS = 10_000;
+/** 정점(박자) 전후 이 범위(ms) 안에 탭하면 PERFECT */
+export const PERFECT_MS = 100;
 const GOOD_MS = 200;
 
 export type Judgement = 'PERFECT' | 'GOOD' | 'MISS';
@@ -31,6 +33,12 @@ export function scheduleBeats(durationMs: number = DURATION_MS): number[] {
   }
   return beats;
 }
+
+/**
+ * 이론상 최고 점수(모든 박자 PERFECT). Supabase games.max_score와 같아야 한다.
+ * 시간·BPM·점수 규칙을 바꾸면 마이그레이션의 max_score도 바꾼다.
+ */
+export const MAX_SCORE = scheduleBeats().length * POINTS.PERFECT;
 
 export function nearestBeatIndex(beats: readonly number[], elapsedMs: number): number {
   let best = 0;

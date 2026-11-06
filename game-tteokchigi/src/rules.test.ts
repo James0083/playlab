@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { bpmAt, judge, nearestBeatIndex, pestleHeight, scheduleBeats } from './rules.ts';
+import {
+  bpmAt,
+  judge,
+  MAX_SCORE,
+  nearestBeatIndex,
+  pestleHeight,
+  POINTS,
+  scheduleBeats,
+} from './rules.ts';
 
 test('판정 경계: ±100 PERFECT, ±200 GOOD, 그 외 MISS', () => {
   assert.equal(judge(0), 'PERFECT');
@@ -35,4 +43,9 @@ test('가장 가까운 박자를 찾는다', () => {
 test('절굿공이는 박자에 정점, 박자 사이 중간에 바닥이다', () => {
   assert.equal(pestleHeight([1000, 2000], 1000), 1);
   assert.equal(pestleHeight([1000, 2000], 1500), 0);
+});
+
+test('최고 점수는 모든 박자를 PERFECT로 맞힌 점수다 (마이그레이션 max_score와 같아야 함)', () => {
+  assert.equal(MAX_SCORE, scheduleBeats().length * POINTS.PERFECT);
+  assert.equal(MAX_SCORE, 144);
 });
