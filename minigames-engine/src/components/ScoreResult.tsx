@@ -12,7 +12,11 @@ interface ScoreResultProps {
   /** 점수 위에 보여줄 한 줄. 예: "완성!", "깨졌어요!" */
   headline?: string;
   metadata?: Record<string, unknown>;
+  /** 주 버튼. 이름은 실제로 일어날 일과 맞춘다(같은 판을 다시 시작하면 "다시 하기") */
   onRestart: () => void;
+  restartLabel?: string;
+  /** 두 번째 버튼(선택). 예: 다른 모양 고르기 */
+  secondaryAction?: { label: string; onClick: () => void };
 }
 
 type SubmitState = 'idle' | 'submitting' | 'done' | 'error';
@@ -31,6 +35,8 @@ export function ScoreResult({
   headline,
   metadata,
   onRestart,
+  restartLabel = '다시 하기',
+  secondaryAction,
 }: ScoreResultProps) {
   const [previousBest] = useState(() => getLocalBest(slug));
   const [nickname, setNickname] = useState(getSavedNickname);
@@ -88,8 +94,17 @@ export function ScoreResult({
 
       <div className="mg-actions">
         <button type="button" className="mg-button" onClick={onRestart}>
-          다시 하기
+          {restartLabel}
         </button>
+        {secondaryAction && (
+          <button
+            type="button"
+            className="mg-button mg-button-secondary"
+            onClick={secondaryAction.onClick}
+          >
+            {secondaryAction.label}
+          </button>
+        )}
         {/* 0점은 자랑할 거리가 없어 공유 버튼을 숨긴다 */}
         {score > 0 && <ShareButton title={title} score={score} />}
       </div>
