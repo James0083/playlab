@@ -7,13 +7,14 @@ james-playlab.com 미니게임 모노레포. 계획과 결정 사항은 [minigam
 | `minigames-engine/` | `@minigames/engine`: 훅, 공통 컴포넌트, Supabase 래퍼, `supabase/migrations` | 배포 안 함 (`workspace:*`) |
 | `minigames-home/` | 홈(정적) + 라우터 Worker. 게임 목록 단일 소스는 `lib/games.ts` | wrangler |
 | `game-tteokchigi/` | 떡치기 (Vite + React). 판정 규칙은 `src/rules.ts` | Cloudflare Pages |
+| `game-dalgona/` | 달고나 뽑기. 모양은 `src/shapes.ts`, 긁기 판정은 `src/trace.ts` | Cloudflare Pages |
 
 요구 사항: Node 24, pnpm 12.15.0 (`packageManager` 필드에 고정)
 
 ```sh
 pnpm install
-pnpm dev:game     # 엔진 빌드 후 떡치기 개발 서버
-pnpm test         # Worker 라우팅 + 떡치기 규칙
+pnpm dev          # http://localhost:5173 — 홈(/)과 모든 게임(/games/<slug>/)을 배포와 같은 경로로 띄운다
+pnpm test         # 엔진·홈·Worker·게임 규칙 테스트
 pnpm typecheck
 pnpm build        # 엔진 → 홈/게임 순서로 빌드
 pnpm check        # 커밋 전: 포맷 검사 → lint → 타입 검사 → 테스트
