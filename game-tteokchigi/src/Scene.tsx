@@ -9,8 +9,13 @@ export interface SceneElements {
   shadow: SVGEllipseElement | null;
 }
 
-/** 떡메 머리 중심. 떡메는 이 점을 기준으로 기울어진다 */
-const HEAD_CENTER = { x: 150, y: 246 };
+/**
+ * 떡메 머리 중심. 떡메는 이 점을 기준으로 기울어진다.
+ * 머리(길이 118, 굵기 52)를 세워 두었으므로 아래 끝면(y = 213 + 59 = 272)이 떡 윗면에 닿는다.
+ */
+const HEAD_CENTER = { x: 150, y: 213 };
+const HEAD_LENGTH = 118;
+const HEAD_THICKNESS = 52;
 /** 가장 높이 들었을 때 올라가는 거리 */
 const MALLET_LIFT = 185;
 /**
@@ -173,7 +178,8 @@ function SceneDefinitions() {
         <stop offset="60%" stopColor="#4a4a4a" />
         <stop offset="100%" stopColor="#1a1a1a" />
       </linearGradient>
-      <linearGradient id="tt-handle" x1="0" x2="1">
+      {/* 손잡이: 가로로 뻗은 원기둥이라 위아래로 명암이 바뀐다 */}
+      <linearGradient id="tt-handle" x1="0" x2="0" y1="0" y2="1">
         <stop offset="0%" stopColor="#8a5a2e" />
         <stop offset="45%" stopColor="#e4b47e" />
         <stop offset="100%" stopColor="#7a4c24" />
@@ -204,35 +210,50 @@ function Mortar() {
   );
 }
 
-/** 떡메: 옆으로 누운 원통 머리 + 쇠테 + 오른쪽 위로 뻗은 손잡이. 떡에 닿은 자세로 그린다 */
+/**
+ * 떡메: 원통 머리를 세워 아래 끝면으로 떡을 수직으로 친다.
+ * 손잡이는 머리 옆 가운데에서 오른쪽(떡메를 든 사람 쪽)으로 머리와 수직으로 뻗는다.
+ * 떡에 닿은 자세로 그린다.
+ */
 function Mallet() {
+  const { x: cx, y: cy } = HEAD_CENTER;
+  const left = cx - HEAD_LENGTH / 2;
+  const top = cy - HEAD_THICKNESS / 2;
   return (
     <g>
-      {/* 손잡이: 밝은 면과 어두운 면 두 줄로 원기둥처럼 보이게 한다 */}
-      <line
-        x1={152}
-        y1={222}
-        x2={236}
-        y2={-60}
-        stroke="url(#tt-handle)"
-        strokeWidth={16}
-        strokeLinecap="round"
-      />
-      <line
-        x1={157}
-        y1={222}
-        x2={241}
-        y2={-58}
-        stroke="#5e3a18"
-        strokeOpacity={0.45}
-        strokeWidth={4}
-      />
-      {/* 머리 */}
-      <rect x={92} y={220} width={118} height={52} rx={8} fill="url(#tt-head)" />
-      <rect x={100} y={220} width={8} height={52} fill="url(#tt-band)" />
-      <rect x={194} y={220} width={8} height={52} fill="url(#tt-band)" />
-      {/* 머리 윗면 하이라이트 */}
-      <rect x={108} y={226} width={82} height={5} rx={2.5} fill="#fff" opacity={0.25} />
+      {/* 손잡이: 밝은 면 위에 어두운 줄을 겹쳐 원기둥처럼 보이게 한다. 오른쪽 끝은 화면 밖으로 이어진다 */}
+      <rect x={cx + 10} y={cy - 8} width={220} height={16} rx={8} fill="url(#tt-handle)" />
+      <rect x={cx + 10} y={cy + 2} width={220} height={4} fill="#5e3a18" opacity={0.45} />
+      {/* 머리: 누운 원통 모양을 그린 뒤 -90° 돌려 세운다(왼쪽 위에서 오는 빛 방향 유지) */}
+      <g transform={`rotate(-90 ${cx} ${cy})`}>
+        <rect
+          x={left}
+          y={top}
+          width={HEAD_LENGTH}
+          height={HEAD_THICKNESS}
+          rx={8}
+          fill="url(#tt-head)"
+        />
+        {/* 쇠테 두 줄 */}
+        <rect x={left + 8} y={top} width={8} height={HEAD_THICKNESS} fill="url(#tt-band)" />
+        <rect
+          x={left + HEAD_LENGTH - 16}
+          y={top}
+          width={8}
+          height={HEAD_THICKNESS}
+          fill="url(#tt-band)"
+        />
+        {/* 하이라이트 */}
+        <rect
+          x={left + 16}
+          y={top + 6}
+          width={HEAD_LENGTH - 36}
+          height={5}
+          rx={2.5}
+          fill="#fff"
+          opacity={0.25}
+        />
+      </g>
     </g>
   );
 }
