@@ -84,6 +84,7 @@ game.css          이 게임 전용 스타일
 - 외부 데이터(Supabase 응답 등)는 타입을 선언한다. 예: `database.types.ts`
 - `!`(non-null 단언)는 바로 앞 로직이 값을 보장할 때만 쓴다. 테스트에서는 `?? 기본값`을 쓴다
 - 타입만 가져올 때는 `import { type X }`로 쓴다 (🔧)
+- **상대 경로 import에는 확장자를 붙인다.** `from './rules.ts'`, `from './PlayField.tsx'`. 그래야 `node --test`가 빌드 없이 소스를 바로 실행할 수 있다. 패키지 import(`react`, `@minigames/engine`)에는 붙이지 않는다
 - **named export만 쓴다** (🔧). default export는 도구 설정 파일과 Worker 진입점만 허용한다
 - 공개 함수와 타입의 의미가 이름만으로 부족하면 JSDoc `/** */`을 단다. 단위, null의 의미, 호출 조건 같은 것이다
 

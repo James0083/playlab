@@ -14,10 +14,12 @@
 
 | 항목 | 상태 |
 |---|---|
-| 도메인 | **`james-playlab.com`으로 결정, 구매 전.** 2026-11-06 whois 기준 미등록. 원래 계획의 `minigames.com`은 다른 사람이 등록한 도메인이다 |
+| 도메인 | **`james-playlab.com`으로 결정, 구매 전. 최후순위.** 2026-11-06 whois 기준 미등록. 원래 계획의 `minigames.com`은 다른 사람이 등록한 도메인이다 |
+| Supabase(랭킹) | **최후순위.** 그 전까지 게임은 오프라인 모드(로컬 최고기록)로 동작한다 |
 | 레포 구성 | **모노레포로 결정.** 아래 [레포 구성](#레포-구성) 참고 |
 | 떡치기 시작 BPM | 임시 60. 플레이테스트 후 확정 |
-| 홈 디자인 | "디자인 완료"로 적혀 있던 `minigames-home.html`이 작업 폴더에 없다. 파일을 찾아 `minigames-home/src/index.html`에 반영해야 한다 |
+| 떡치기 음성 | **쓰지 않음.** "よーい"는 말풍선으로 보여주고, 음성은 추후 추가 사항으로 남긴다 |
+| 홈 디자인 | 디자인 파일 `playlab-home.html`(이전 이름 `minigames-home.html`)이 아직 없다. 디자인 결정 사항은 [Phase 2](#phase-2--메인-홈-minigames-home--뼈대-완료-임시-화면) 참고 |
 
 ---
 
@@ -164,7 +166,8 @@ playlab/                   ← pnpm workspace
 minigames-engine/
 ├── src/
 │   ├── hooks/
-│   │   ├── useGameSession.ts     # 상태머신 idle → countdown → playing → result, 타이머(null이면 무한 콤보)
+│   │   ├── gameSessionReducer.ts # 상태 전이 idle → countdown → playing → result (순수 함수, 테스트 있음)
+│   │   ├── useGameSession.ts     # reducer + 카운트다운·타이머 (null이면 무한 콤보)
 │   │   ├── useLeaderboard.ts     # Top 10 조회 + refresh (Realtime 구독 안 함)
 │   │   ├── useDeviceMotion.ts    # DeviceMotion + DeviceOrientation 통합, iOS 권한 요청
 │   │   └── useHaptics.ts         # navigator.vibrate 래퍼 (미지원 환경에선 아무 동작 없음)
@@ -173,10 +176,14 @@ minigames-engine/
 │   │   ├── Countdown.tsx         # 3·2·1·GO
 │   │   ├── ScoreResult.tsx       # 점수, 최고기록 비교, 닉네임 등록, 리더보드, 공유
 │   │   ├── Leaderboard.tsx       # Top 10
-│   │   └── ShareButton.tsx       # Canvas로 카드 이미지 생성 → Web Share API (미지원 시 다운로드)
+│   │   ├── ShareButton.tsx       # Canvas로 카드 이미지 생성 → Web Share API (미지원 시 다운로드)
+│   │   └── ErrorBoundary.tsx     # 게임 화면 오류 시 안내 + 재시작 (GameShell에 내장)
 │   ├── lib/
 │   │   ├── supabase.ts           # 설정 + 동적 import 클라이언트 (미설정 시 오프라인 모드)
-│   │   └── score.ts              # 점수 제출/조회, 익명 player_id, 로컬 최고기록
+│   │   ├── database.types.ts     # Supabase 함수 타입
+│   │   ├── score.ts              # 점수 제출/조회, 익명 player_id, 로컬 최고기록
+│   │   ├── audio.ts              # AudioContext 공유, iOS 잠금 해제, 한 판 단위 출력 채널(sound bus), 효과음 합성(음·잡음)
+│   │   └── clock.ts              # 게임 시계: 오디오 재생 중이면 AudioContext 시각, 아니면 performance.now
 │   ├── styles.css                # 공통 스타일, 라이트/다크 토큰
 │   └── index.ts
 ├── supabase/migrations/0001_init.sql
@@ -193,13 +200,17 @@ minigames-engine/
 
 ### 남은 태스크
 
-- [ ] 엔진 단위 테스트 (useGameSession 상태 전이, score.ts)
-- [ ] 404 / 로딩 / 에러 공통 화면
-- [ ] 사운드 유틸: Web Audio 기반 재생 + iOS 오디오 잠금 해제(첫 탭에서 AudioContext resume)
+- [x] 엔진 단위 테스트: 상태 전이(gameSessionReducer), 게임 시계(clock)
+- [x] score.ts 테스트. 상대 import에 확장자(`.ts`)를 붙이는 규칙으로 바꿔 `node --test`로 바로 실행된다
+- [x] 에러 공통 화면 (ErrorBoundary). 404는 Pages 기본 동작, 로딩 화면은 정적 페이지라 아직 불필요
+- [x] 사운드 유틸: Web Audio 합성 + iOS 오디오 잠금 해제(시작 버튼에서 AudioContext resume)
+- [ ] (추후) 음원 파일 재생(`decodeAudioData`). 음성 등 녹음 음원을 쓰기로 하면 추가
 
 ---
 
 ## Phase 1 — 공통 인프라 (Supabase) ✅ 마이그레이션 작성, 미적용
+
+> **적용은 최후순위.** 마이그레이션 작성과 `max_score` 관리만 게임 개발과 함께 진행하고, 프로젝트 생성·적용은 맨 마지막에 한다.
 
 [0001_init.sql](minigames-engine/supabase/migrations/0001_init.sql). 메모리 Postgres(PGlite)에서 접근 규칙 10가지를 검증했다.
 
@@ -216,7 +227,8 @@ minigames-engine/
 ### 태스크
 
 - [ ] Supabase 프로젝트 생성 후 마이그레이션 적용
-- [ ] 게임별 `max_score` 확정 (떡치기는 박자 수 × 2로 계산 가능)
+- [x] 떡치기 `max_score` = 144 (72박자 × 2점). `rules.ts`의 `MAX_SCORE`와 테스트로 맞춰 둠
+- [ ] 달고나·버블티 `max_score` (규칙 확정 후)
 - [ ] 닉네임 금칙어 필터
 - [ ] 무료 프로젝트는 1주일 동안 활동이 없으면 일시정지된다. 출시 후 트래픽이 적은 시기에 대비책 마련
 
@@ -235,9 +247,22 @@ minigames-home/
 
 ### 태스크
 
-- [ ] 디자인 완료본(`minigames-home.html`) 찾아서 `src/index.html`에 반영
-- [ ] 도메인 구매 → Cloudflare에 연결 → `wrangler.toml` routes 해제
-- [ ] Worker 배포 (`pnpm deploy`)
+- [ ] 홈 디자인 결정(아래) → 디자인 파일 `playlab-home.html` 작성 → `src/index.html`에 반영
+- [ ] (최후순위) 도메인 구매 → Cloudflare에 연결 → `wrangler.toml` routes 해제
+- [ ] (최후순위) Worker 배포 (`pnpm deploy`)
+
+### 홈 디자인 결정 사항
+
+| 결정 | 선택지 예시 | 영향 |
+|---|---|---|
+| 브랜드 이름(화면 표기) | "James Playlab" / "플레이랩" / 한글 별칭 | 로고, `<title>`, 공유 카드 문구 |
+| 분위기·톤 | 레트로 오락실 / 한국 전통 놀이(한지·오방색) / 미니멀 포트폴리오 | 색 토큰, 폰트, 일러스트 방향. 엔진 `--mg-*` 색과 맞춰야 한다 |
+| 첫 화면 구성 | 게임 카드 목록만 / 대표 게임 1개 크게 + 목록 / 오늘의 게임 | 진입 동선, 첫 화면 높이 |
+| 게임 카드 정보 | 이모지·이름·한 줄 설명(현재) + 조작 방식? 난이도? 내 최고기록? | `lib/games.ts` 필드 추가 여부 |
+| 준비 중 게임 표시 | 흐리게 표시(현재) / 숨김 / "곧 출시" 티저 | 홈에서 보이는 게임 수 |
+| 소개·포트폴리오 영역 | 없음 / 짧은 자기소개 + 링크(GitHub 등) | 포트폴리오 목적이라면 필요 |
+| 폰트 | 시스템 폰트(현재, 0KB) / 웹폰트 | 웹폰트는 첫 화면 로딩(LCP 1.5초 목표)에 부담 |
+| 토스 미니앱에서의 홈 | 웹 홈과 같게 / 토스 안에서는 홈 없이 게임 바로 진입 | Phase 5 미니앱 단위 결정과 연결 |
 
 ---
 
@@ -269,15 +294,25 @@ game-<slug>/
 한 박자에 한 번만 인정 (연타 방지)
 ```
 
-**완료된 것:** 판정·BPM·박자 스케줄 규칙과 테스트, 절굿공이 애니메이션, 진동, 결과 화면 연결
+**완료된 것**
+- 판정·BPM·박자 스케줄 규칙과 테스트, 최고 점수(144)
+- 절굿공이 애니메이션, 진동, 결과 화면 연결
+- 배경음악(합성, BPM 연동): 정점마다 북 "동"(4박마다 강세), 바닥(반박자)마다 "딱", 축제풍 5음계 멜로디. 북소리가 곧 탭 타이밍. BPM이 오르면 음악도 빨라진다
+- 효과음(합성): PERFECT/GOOD 타격음, MISS 헛치는 소리
+- "よーい" 말풍선: 절굿공이가 올라가는 동안 よ → よー → よーい로 한 글자씩 드러나고, PERFECT 구간에서 "よーい!"로 강조
+- BPM이 오를 때 "빨라져요! ♩=65" 알림
+- 판정·애니메이션·배경음악이 같은 게임 시계(오디오 시각)를 사용
+- 판정 문구 팝 + 떡 눌림 이펙트 (모션 줄이기 설정 존중)
 
-**원래 계획에서 바뀐 점:** 절굿공이를 CSS `@keyframes`가 아니라 requestAnimationFrame으로 움직인다. 애니메이션과 판정이 같은 시계를 써야 BPM이 바뀌어도 어긋나지 않는다.
+**원래 계획에서 바뀐 점**
+- 절굿공이를 CSS `@keyframes`가 아니라 requestAnimationFrame으로 움직인다. 애니메이션과 판정이 같은 시계를 써야 BPM이 바뀌어도 어긋나지 않는다
+- 타격음·헛치는 소리는 음원 파일 대신 Web Audio로 합성한다. 라이선스 문제가 없고 다운로드할 파일도 없다
 
 **남은 태스크**
-- [ ] 사운드 연결. 판정 시계를 `AudioContext.currentTime`으로 교체
-- [ ] 입력 지연 보정(기기별 오프셋 캘리브레이션)
-- [ ] PERFECT/GOOD/MISS 비주얼 이펙트, 떡/절굿공이 그래픽
-- [ ] 사운드 파일 확보: `yoi-yoiyoi.mp3`, `thud-perfect.mp3`, `miss.mp3`. **사용 권한(라이선스)을 확인한 음원만 쓴다**
+- [ ] 입력 지연 보정(기기별 오프셋 캘리브레이션). 실기기 플레이테스트로 필요한 정도를 먼저 확인
+- [ ] 떡/절굿공이 그래픽 (현재는 도형)
+- [ ] 실기기(iOS Safari, Android Chrome) 플레이테스트 → 시작 BPM, 배경음악 음량 확정
+- [ ] (추후) "よーい" 음성. 쓰게 되면 직접 녹음하거나 **사용 권한(라이선스)을 확인한** 음원만 쓴다
 
 ### 3-2. 달고나 뽑기 🍯
 
@@ -418,15 +453,17 @@ game-<slug>/
 ## 개발 우선순위
 
 ```
-Phase 0 (엔진) ✅ 뼈대
-  → Phase 1 (Supabase) ✅ 마이그레이션 작성, 적용 대기
-  → Phase 2 (홈 + Worker) ✅ 뼈대, 도메인·디자인 대기
-  → Phase 3 (떡치기 완성 → 달고나 → 버블티)
+Phase 0 (엔진) ✅ 사운드·시계·에러 화면까지
+  → Phase 3 (떡치기 마무리 → 달고나 → 버블티)
+  → Phase 2 (홈 디자인 반영. 도메인 없이)
   → Phase 4 (짜장면 · 팽이 · 제기)
   → Phase 5 (토스 연동)
   → Phase 6 (전통 놀이 3종)
   → Phase 7 (나머지)
+  → 최후순위: Supabase 적용(Phase 1) · 도메인 구매·연결·배포(Phase 2)
 ```
+
+> Supabase와 도메인은 가장 뒤로 미뤘다(2026-11-06 결정). 그 전까지 게임은 오프라인 모드로 동작하고, 미리보기 배포가 필요하면 `*.pages.dev` 주소를 쓴다.
 
 > Phase 번호를 실제 진행 순서에 맞게 바꿨다. 원래의 Phase 6(토스)이 Phase 5가 되고, 원래의 Phase 5(오징어게임 3종)가 Phase 6(전통 놀이 3종)이 됐다.
 
