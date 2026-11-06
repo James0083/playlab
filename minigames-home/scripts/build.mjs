@@ -15,4 +15,7 @@ const template = await readFile(new URL('../src/index.html', import.meta.url), '
 const dist = new URL('../dist/', import.meta.url);
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
-await writeFile(new URL('index.html', dist), template.replace('<ul><!--GAMES--></ul>', `<ul>${items}</ul>`));
+await writeFile(
+  new URL('index.html', dist),
+  template.replace('<ul><!--GAMES--></ul>', `<ul>${items}</ul>`),
+);

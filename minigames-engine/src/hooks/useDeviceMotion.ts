@@ -14,7 +14,8 @@ type PermissionCapable = { requestPermission?: () => Promise<'granted' | 'denied
 
 function initialStatus(): MotionStatus {
   if (typeof window === 'undefined' || !('DeviceMotionEvent' in window)) return 'unsupported';
-  const needsPrompt = typeof (DeviceMotionEvent as unknown as PermissionCapable).requestPermission === 'function';
+  const needsPrompt =
+    typeof (DeviceMotionEvent as unknown as PermissionCapable).requestPermission === 'function';
   return needsPrompt ? 'needs-permission' : 'granted';
 }
 
@@ -34,7 +35,10 @@ export function useDeviceMotion(onSample: (sample: MotionSample) => void, enable
     if (typeof motion.requestPermission !== 'function') return;
     try {
       // 제스처가 유효한 동안 두 요청을 동시에 시작한다.
-      const results = await Promise.all([motion.requestPermission(), orientation.requestPermission?.() ?? 'granted']);
+      const results = await Promise.all([
+        motion.requestPermission(),
+        orientation.requestPermission?.() ?? 'granted',
+      ]);
       setStatus(results.every((r) => r === 'granted') ? 'granted' : 'denied');
     } catch {
       setStatus('denied');

@@ -10,7 +10,8 @@ let client: Promise<SupabaseClient> | null = null;
 
 /** 값이 비어 있으면 오프라인 모드로 동작한다(로컬 최고기록만 사용). */
 export function configureSupabase(next: Partial<SupabaseConfig>): void {
-  config = next.url && next.publishableKey ? { url: next.url, publishableKey: next.publishableKey } : null;
+  config =
+    next.url && next.publishableKey ? { url: next.url, publishableKey: next.publishableKey } : null;
   client = null;
 }
 

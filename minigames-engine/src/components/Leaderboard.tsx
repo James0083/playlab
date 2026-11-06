@@ -9,8 +9,10 @@ interface LeaderboardProps {
 export function Leaderboard({ entries, status }: LeaderboardProps) {
   if (status === 'offline') return <p className="mg-muted">랭킹 서버에 연결되어 있지 않아요.</p>;
   if (status === 'error') return <p className="mg-muted">랭킹을 불러오지 못했어요.</p>;
-  if (status === 'loading' && entries.length === 0) return <p className="mg-muted">랭킹을 불러오는 중…</p>;
-  if (entries.length === 0) return <p className="mg-muted">아직 기록이 없어요. 첫 기록을 남겨 보세요!</p>;
+  if (status === 'loading' && entries.length === 0)
+    return <p className="mg-muted">랭킹을 불러오는 중…</p>;
+  if (entries.length === 0)
+    return <p className="mg-muted">아직 기록이 없어요. 첫 기록을 남겨 보세요!</p>;
 
   return (
     <ol className="mg-leaderboard">

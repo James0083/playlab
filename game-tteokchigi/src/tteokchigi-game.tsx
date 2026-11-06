@@ -1,6 +1,14 @@
 import { Countdown, GameShell, ScoreResult, useGameSession, useHaptics } from '@minigames/engine';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DURATION_MS, judge, nearestBeatIndex, pestleHeight, POINTS, scheduleBeats, type Judgement } from './rules';
+import {
+  DURATION_MS,
+  judge,
+  nearestBeatIndex,
+  pestleHeight,
+  POINTS,
+  scheduleBeats,
+  type Judgement,
+} from './rules';
 
 const SLUG = 'tteokchigi';
 const TITLE = '떡치기';
@@ -23,7 +31,8 @@ export function TteokchigiGame() {
     setJudgement(null);
     let frame = requestAnimationFrame(function tick() {
       const height = pestleHeight(beats, performance.now() - startedAt);
-      if (pestle.current) pestle.current.style.transform = `translateY(${-height * PESTLE_TRAVEL_PX}px)`;
+      if (pestle.current)
+        pestle.current.style.transform = `translateY(${-height * PESTLE_TRAVEL_PX}px)`;
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
@@ -42,7 +51,11 @@ export function TteokchigiGame() {
   };
 
   return (
-    <GameShell title={TITLE} score={phase === 'playing' ? session.score : undefined} remainingMs={phase === 'playing' ? session.remainingMs : undefined}>
+    <GameShell
+      title={TITLE}
+      score={phase === 'playing' ? session.score : undefined}
+      remainingMs={phase === 'playing' ? session.remainingMs : undefined}
+    >
       {phase === 'idle' && (
         <>
           <p className="mg-muted">절굿공이가 맨 위에 닿는 순간 탭하세요.</p>
@@ -54,12 +67,16 @@ export function TteokchigiGame() {
       {phase === 'countdown' && <Countdown />}
       {phase === 'playing' && (
         <button type="button" className="tt-field" aria-label="떡 치기" onPointerDown={onTap}>
-          <span className="tt-judgement" role="status">{judgement}</span>
+          <span className="tt-judgement" role="status">
+            {judgement}
+          </span>
           <div ref={pestle} className="tt-pestle" />
           <div className="tt-mochi" />
         </button>
       )}
-      {phase === 'result' && <ScoreResult slug={SLUG} title={TITLE} score={session.score} onRestart={session.reset} />}
+      {phase === 'result' && (
+        <ScoreResult slug={SLUG} title={TITLE} score={session.score} onRestart={session.reset} />
+      )}
     </GameShell>
   );
 }

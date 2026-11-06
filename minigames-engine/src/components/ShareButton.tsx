@@ -28,7 +28,10 @@ function renderCard(title: string, score: number): Promise<Blob> {
   ctx.fillText('점', size / 2, 740);
 
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('이미지 생성 실패'))), 'image/png');
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('이미지 생성 실패'))),
+      'image/png',
+    );
   });
 }
 
@@ -41,7 +44,12 @@ export function ShareButton({ title, score }: ShareButtonProps) {
       const blob = await renderCard(title, score);
       const file = new File([blob], `${title}-${score}.png`, { type: 'image/png' });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title, text: `${title} ${score}점!`, url: location.href });
+        await navigator.share({
+          files: [file],
+          title,
+          text: `${title} ${score}점!`,
+          url: location.href,
+        });
         return;
       }
       // 파일 공유를 지원하지 않으면(주로 데스크톱) 이미지를 내려받는다.
@@ -64,7 +72,11 @@ export function ShareButton({ title, score }: ShareButtonProps) {
       <button type="button" className="mg-button mg-button-secondary" onClick={share}>
         점수 공유
       </button>
-      {failed && <p className="mg-muted" role="alert">공유하지 못했어요. 다시 시도해 주세요.</p>}
+      {failed && (
+        <p className="mg-muted" role="alert">
+          공유하지 못했어요. 다시 시도해 주세요.
+        </p>
+      )}
     </>
   );
 }

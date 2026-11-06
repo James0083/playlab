@@ -5,7 +5,9 @@ import { createHandler } from './worker.js';
 const handler = createHandler({ '/games/a': 'https://game-a.pages.dev' });
 const env = { ASSETS: { fetch: async () => new Response('home') } };
 const realFetch = globalThis.fetch;
-afterEach(() => { globalThis.fetch = realFetch; });
+afterEach(() => {
+  globalThis.fetch = realFetch;
+});
 
 function mockUpstream(response) {
   const calls = [];
@@ -48,6 +50,9 @@ test('외부 리다이렉트는 그대로 둔다', async () => {
 });
 
 test('GET/HEAD 외 메서드는 거부한다', async () => {
-  const res = await handler.fetch(new Request('https://x.test/games/a', { method: 'POST', body: 'x' }), env);
+  const res = await handler.fetch(
+    new Request('https://x.test/games/a', { method: 'POST', body: 'x' }),
+    env,
+  );
   assert.equal(res.status, 405);
 });

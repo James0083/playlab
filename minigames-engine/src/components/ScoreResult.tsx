@@ -39,7 +39,9 @@ export function ScoreResult({ slug, title, score, metadata, onRestart }: ScoreRe
   return (
     <section className="mg-result">
       <p className="mg-score">{score}점</p>
-      <p className="mg-muted">{score > previousBest ? '최고기록 달성!' : `내 최고기록 ${previousBest}점`}</p>
+      <p className="mg-muted">
+        {score > previousBest ? '최고기록 달성!' : `내 최고기록 ${previousBest}점`}
+      </p>
 
       {isSupabaseConfigured() && submit !== 'done' && (
         <form className="mg-submit" onSubmit={onSubmit}>
@@ -56,7 +58,11 @@ export function ScoreResult({ slug, title, score, metadata, onRestart }: ScoreRe
           </button>
         </form>
       )}
-      {submit === 'error' && <p className="mg-muted" role="alert">등록하지 못했어요. 잠시 후 다시 시도해 주세요.</p>}
+      {submit === 'error' && (
+        <p className="mg-muted" role="alert">
+          등록하지 못했어요. 잠시 후 다시 시도해 주세요.
+        </p>
+      )}
 
       <Leaderboard entries={entries} status={status} />
 

@@ -1,7 +1,9 @@
 import { GAMES } from './lib/games.ts';
 
 const liveRoutes = () =>
-  Object.fromEntries(GAMES.filter((g) => g.status === 'live').map((g) => [`/games/${g.slug}`, g.origin]));
+  Object.fromEntries(
+    GAMES.filter((g) => g.status === 'live').map((g) => [`/games/${g.slug}`, g.origin]),
+  );
 
 /** Pages가 보낸 리다이렉트는 pages.dev 기준이므로 공개 경로로 되돌린다. */
 function rewriteLocation(location, targetUrl, origin, prefix, publicUrl) {
@@ -20,7 +22,10 @@ export function createHandler(routes) {
 
         // 게임은 정적 파일만 서빙한다. 점수 API는 Supabase로 바로 간다.
         if (request.method !== 'GET' && request.method !== 'HEAD') {
-          return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+          return new Response('Method Not Allowed', {
+            status: 405,
+            headers: { Allow: 'GET, HEAD' },
+          });
         }
 
         const targetUrl = new URL((url.pathname.slice(prefix.length) || '/') + url.search, origin);
@@ -29,7 +34,10 @@ export function createHandler(routes) {
 
         const location = upstream.headers.get('location');
         if (location) {
-          response.headers.set('location', rewriteLocation(location, targetUrl, origin, prefix, url));
+          response.headers.set(
+            'location',
+            rewriteLocation(location, targetUrl, origin, prefix, url),
+          );
         }
         return response;
       }

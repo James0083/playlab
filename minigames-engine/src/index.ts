@@ -13,5 +13,12 @@ export { Leaderboard } from './components/Leaderboard';
 export { ShareButton } from './components/ShareButton';
 
 export { configureSupabase, isSupabaseConfigured } from './lib/supabase';
-export { fetchTop10, getLocalBest, getPlayerId, getSavedNickname, saveLocalBest, submitScore } from './lib/score';
+export {
+  fetchTop10,
+  getLocalBest,
+  getPlayerId,
+  getSavedNickname,
+  saveLocalBest,
+  submitScore,
+} from './lib/score';
 export type { LeaderboardEntry } from './lib/score';

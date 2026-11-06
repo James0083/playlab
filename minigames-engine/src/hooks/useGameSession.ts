@@ -23,7 +23,10 @@ export interface GameSession {
 
 const TICK_MS = 100;
 
-export function useGameSession({ durationMs, countdownMs = 3000 }: GameSessionOptions): GameSession {
+export function useGameSession({
+  durationMs,
+  countdownMs = 3000,
+}: GameSessionOptions): GameSession {
   const [phase, setPhase] = useState<GamePhase>('idle');
   const [score, setScore] = useState(0);
   const [remainingMs, setRemainingMs] = useState<number | null>(durationMs);

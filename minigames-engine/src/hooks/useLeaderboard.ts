@@ -10,7 +10,9 @@ export type LeaderboardStatus = 'offline' | 'loading' | 'ready' | 'error';
  */
 export function useLeaderboard(slug: string) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [status, setStatus] = useState<LeaderboardStatus>(isSupabaseConfigured() ? 'loading' : 'offline');
+  const [status, setStatus] = useState<LeaderboardStatus>(
+    isSupabaseConfigured() ? 'loading' : 'offline',
+  );
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured()) return;

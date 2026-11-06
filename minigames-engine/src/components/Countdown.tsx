@@ -6,7 +6,10 @@ export function Countdown({ durationMs = 3000 }: { durationMs?: number }) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => setIndex((i) => Math.min(i + 1, steps.length - 1)), durationMs / (steps.length - 1));
+    const id = setInterval(
+      () => setIndex((i) => Math.min(i + 1, steps.length - 1)),
+      durationMs / (steps.length - 1),
+    );
     return () => clearInterval(id);
   }, [durationMs, steps.length]);
 

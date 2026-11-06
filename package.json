@@ -9,7 +9,22 @@
     "build": "pnpm --filter @minigames/engine build && pnpm --filter !@minigames/engine -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm --filter @minigames/engine build && pnpm -r typecheck",
-    "dev:game": "pnpm --filter @minigames/engine build && pnpm --filter game-tteokchigi dev"
+    "dev:game": "pnpm --filter @minigames/engine build && pnpm --filter game-tteokchigi dev",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
   },
-  "packageManager": "pnpm@12.15.0"
+  "packageManager": "pnpm@12.15.0",
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0"
+  }
 }
