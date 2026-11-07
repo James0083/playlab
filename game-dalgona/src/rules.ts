@@ -1,5 +1,5 @@
 import { SHAPES, type Shape } from './shapes.ts';
-import { CRACK_DISTANCE, type TraceState } from './trace.ts';
+import { VISIT_RADIUS, type TraceState } from './trace.ts';
 
 /** 제한 시간. 플랜에 없어 정한 값(플레이테스트 후 조정) */
 export const TIME_LIMIT_MS = 60_000;
@@ -21,11 +21,14 @@ export function progressOf(trace: TraceState): number {
 export const isComplete = (trace: TraceState) => progressOf(trace) >= COMPLETE_RATIO;
 export const isBroken = (trace: TraceState) => trace.cracks >= MAX_CRACKS;
 
-/** 선을 얼마나 정확히 따라갔는지(0~1). 평균 이탈 거리가 0이면 1, 금 갈 거리면 0 */
+/**
+ * 선을 얼마나 정확히 따라갔는지(0~1). 체크포인트를 처음 긁을 때의 평균 이탈 거리가 0이면 1,
+ * 긁는 것으로 인정되는 가장 먼 거리(VISIT_RADIUS)면 0.
+ */
 export function precisionOf(trace: TraceState): number {
   if (trace.sampleCount === 0) return 1;
   const averageOffset = trace.deviationTotal / trace.sampleCount;
-  return Math.min(Math.max(1 - averageOffset / CRACK_DISTANCE, 0), 1);
+  return Math.min(Math.max(1 - averageOffset / VISIT_RADIUS, 0), 1);
 }
 
 /**
@@ -64,4 +67,16 @@ export function nextShapeIndex({
   total: number;
 }): number {
   return isComplete && index + 1 < total ? index + 1 : index;
+}
+
+/** 받침이 있으면 '을', 없으면 '를'. 예: 집을, 세모를 */
+function objectParticle(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  const isHangul = code >= 0 && code < 11_172;
+  return isHangul && code % 28 !== 0 ? '을' : '를';
+}
+
+/** 잠긴 모양을 눌렀을 때 안내 문구. previous는 지금 열린 마지막 모양 */
+export function unlockHint(previous: Shape): string {
+  return `${previous.name}${objectParticle(previous.name)} 완성하면 열려요`;
 }

@@ -95,3 +95,31 @@ test('선에서 조금(1단위) 안쪽으로 비켜 긁어도 모서리까지 �
   }));
   assert.ok(isComplete(drag(square, inset)));
 });
+
+test('이미 긁은 곳을 다시 문질러도 정확도가 오르지 않는다', () => {
+  // 선에서 2단위 떨어져 한 바퀴(정확도 낮음)
+  const sloppyLoop = circle.checkpoints.map(({ x, y }) => ({
+    x: 50 + ((x - 50) * 26) / 24,
+    y: 50 + ((y - 50) * 26) / 24,
+  }));
+  const sloppy = drag(circle, sloppyLoop);
+  // 그 뒤 선 위를 여러 번 문지르기
+  const rubbed = drag(circle, [...circle.checkpoints, ...circle.checkpoints], sloppy);
+  assert.equal(precisionOf(rubbed), precisionOf(sloppy));
+});
+
+test('우산 물결을 직선으로 지나가면 완성되지 않는다', () => {
+  const umbrella = getShape(5);
+  const [canopy, handle] = umbrella.strokes;
+  // 위쪽 반원만(중심 (50,52) 반지름 26인 점). 물결 점은 빼고 아래 직선으로 대신 지나간다
+  const top = canopy!.filter(
+    (point) => Math.abs(Math.hypot(point.x - 50, point.y - 52) - 26) < 0.01,
+  );
+  const straight = [
+    { x: 76, y: 50 },
+    { x: 24, y: 50 },
+  ]; // 물결 대신 직선
+  let trace = drag(umbrella, [...top, ...straight]);
+  trace = drag(umbrella, [...handle!], trace);
+  assert.equal(isComplete(trace), false);
+});

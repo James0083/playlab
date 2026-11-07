@@ -72,6 +72,16 @@ export function resample(stroke: Stroke, spacing: number): Point[] {
   return result;
 }
 
+/** 이 거리 안이면 시작점과 끝점이 같은 것으로 본다. 원(0°→360°)은 부동소수점 오차로 끝점이 아주 조금 어긋난다 */
+const CLOSED_TOLERANCE = 0.1;
+
+/** 닫힌 도형(시작점으로 돌아오는 선)인지 */
+export function isClosedStroke(stroke: Stroke): boolean {
+  const [first] = stroke;
+  const last = stroke.at(-1);
+  return first !== undefined && last !== undefined && distance(first, last) <= CLOSED_TOLERANCE;
+}
+
 /** SVG polyline의 points 속성 문자열 */
 export function formatPoints(stroke: Stroke): string {
   return stroke.map(({ x, y }) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
@@ -125,14 +135,20 @@ const RABBIT_OUTLINE = closed([
   ...arc({ cx: 58, cy: 33, rx: 5.5, ry: 14, from: 100, to: 440, rotate: 12 }),
 ]);
 
-/** 우산 갓: 위쪽 반원 + 아래쪽 물결 3개 */
+/**
+ * 우산 갓: 위쪽 반원 + 아래쪽 물결 3개.
+ * 물결 깊이(UMBRELLA_WAVE_DEPTH)가 얕으면 물결을 직선으로 지나가도 선 근처에 머물러 긁힌 것이 된다.
+ */
+const UMBRELLA_WAVE_DEPTH = 9;
 const UMBRELLA_CANOPY = [
   ...arc({ cx: 50, cy: 52, rx: 26, from: 180, to: 360 }),
-  ...[67.33, 50, 32.67].flatMap((cx) => arc({ cx, cy: 52, rx: 26 / 3, ry: 5, from: 360, to: 180 })),
+  ...[67.33, 50, 32.67].flatMap((cx) =>
+    arc({ cx, cy: 52, rx: 26 / 3, ry: UMBRELLA_WAVE_DEPTH, from: 360, to: 180 }),
+  ),
 ];
-/** 우산 손잡이: 갓 가운데에서 내려와 J자로 휜다 */
+/** 우산 손잡이: 가운데 물결 꼭대기에서 내려와 J자로 휜다 */
 const UMBRELLA_HANDLE = [
-  { x: 50, y: 47 },
+  { x: 50, y: 52 - UMBRELLA_WAVE_DEPTH },
   { x: 50, y: 74 },
   ...arc({ cx: 45, cy: 74, rx: 5, from: 0, to: 180 }),
 ];

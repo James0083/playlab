@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CHECKPOINT_SPACING, distance, distanceToSegment, resample, SHAPES } from './shapes.ts';
+import {
+  CHECKPOINT_SPACING,
+  distance,
+  distanceToSegment,
+  isClosedStroke,
+  resample,
+  SHAPES,
+} from './shapes.ts';
 
 test('선을 일정한 간격으로 다시 샘플링한다', () => {
   const points = resample(
@@ -50,4 +57,12 @@ test('여러 선으로 된 모양(토끼)도 선과 선 사이는 잇지 않는�
   for (const shape of SHAPES) {
     assert.equal(shape.segments.length, shape.checkpoints.length - shape.strokes.length);
   }
+});
+
+test('닫힌 도형 판별: 원·토끼·우산 갓은 닫혀 있고 우산 손잡이는 열려 있다 (뽑은 모양을 채워 그릴 때 사용)', () => {
+  const byId = Object.fromEntries(SHAPES.map((shape) => [shape.id, shape]));
+  assert.ok(isClosedStroke(byId.circle!.strokes[0]!));
+  assert.ok(isClosedStroke(byId.rabbit!.strokes[0]!));
+  assert.ok(isClosedStroke(byId.umbrella!.strokes[0]!));
+  assert.equal(isClosedStroke(byId.umbrella!.strokes[1]!), false);
 });

@@ -2,12 +2,15 @@ import { closestPointOnSegment, distance, lerp, type Point, type Shape } from '.
 
 // 거리는 보드 단위다. 보드(100단위)가 폰 화면에서 약 320px이라 1단위 ≈ 3.2px.
 
-/** 선에서 이만큼 벗어나면 금이 간다(약 16px). 손가락 굵기를 감안한 값 */
-export const CRACK_DISTANCE = 5;
+/** 선에서 이만큼 벗어나면 금이 간다(약 13px) */
+export const CRACK_DISTANCE = 4;
 /** 선에 이만큼 다시 가까워져야 "돌아왔다"고 본다. 한 번 벗어난 것으로 금이 여러 번 가지 않게 한다 */
-const RETURN_DISTANCE = 3;
-/** 바늘이 선에서 이 거리 안에 있으면 선을 긁고 있는 것으로 본다(손가락 오차 허용) */
-export const VISIT_RADIUS = 3.5;
+const RETURN_DISTANCE = 2.5;
+/**
+ * 바늘이 선에서 이 거리 안(약 8px)에 있어야 선을 긁는 것으로 본다.
+ * 넓으면 우산 물결처럼 굽은 곳을 직선으로 지나가도 긁힌 것이 된다.
+ */
+export const VISIT_RADIUS = 2.5;
 /**
  * 바늘 위치를 선 위로 옮긴 지점에서 이 거리 안의 체크포인트만 긁은 것으로 친다.
  * 바늘 주변을 넓게 인정하면 아직 지나가지 않은 앞쪽까지 긁힌 것이 되어 끝까지 긁기 전에 완성된다.
@@ -25,7 +28,10 @@ export interface TraceState {
   crackPoints: Point[];
   /** 지금 선에서 벗어나 있는지 */
   isOffPath: boolean;
-  /** 정확도 계산용: 검사한 지점들의 선과의 거리 합(CRACK_DISTANCE에서 자름)과 개수 */
+  /**
+   * 정확도 계산용: 체크포인트를 처음 긁었을 때 바늘이 선에서 떨어져 있던 거리의 합과 그 체크포인트 수.
+   * 이미 긁은 곳을 다시 문질러도 바뀌지 않아, 문질러서 정확도를 부풀릴 수 없다.
+   */
   deviationTotal: number;
   sampleCount: number;
 }
@@ -82,8 +88,6 @@ export function traceMove(
 function applySample(trace: TraceState, shape: Shape, point: Point): void {
   const nearest = nearestOnShape(shape, point);
   const offset = nearest.distance;
-  trace.deviationTotal += Math.min(offset, CRACK_DISTANCE);
-  trace.sampleCount += 1;
 
   if (offset > CRACK_DISTANCE && !trace.isOffPath) {
     trace.isOffPath = true;
@@ -93,15 +97,21 @@ function applySample(trace: TraceState, shape: Shape, point: Point): void {
     trace.isOffPath = false;
   }
 
-  if (offset <= VISIT_RADIUS) markVisited(trace, shape, nearest.point);
+  if (offset <= VISIT_RADIUS) markVisited(trace, shape, { scraped: nearest.point, offset });
 }
 
-/** 선 위의 지점 scraped 근처 체크포인트를 긁은 것으로 표시한다 */
-function markVisited(trace: TraceState, shape: Shape, scraped: Point): void {
+/** 선 위의 지점 scraped 근처 체크포인트를 긁은 것으로 표시하고, 그때의 이탈 거리를 정확도에 더한다 */
+function markVisited(
+  trace: TraceState,
+  shape: Shape,
+  { scraped, offset }: { scraped: Point; offset: number },
+): void {
   shape.checkpoints.forEach((checkpoint, i) => {
     if (!trace.visited[i] && distance(checkpoint, scraped) <= SCRAPE_RADIUS) {
       trace.visited[i] = true;
       trace.visitedCount += 1;
+      trace.deviationTotal += offset;
+      trace.sampleCount += 1;
     }
   });
 }

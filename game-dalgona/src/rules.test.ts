@@ -6,6 +6,7 @@ import {
   nextShapeIndex,
   parseUnlockedCount,
   unlockAfterClear,
+  unlockHint,
 } from './rules.ts';
 import { getShape } from './shapes.ts';
 import { startTrace } from './trace.ts';
@@ -45,4 +46,9 @@ test('결과 화면 주 버튼: 완성하면 다음 모양, 실패하거나 마�
   assert.equal(nextShapeIndex({ isComplete: true, index: 1, total: 6 }), 2);
   assert.equal(nextShapeIndex({ isComplete: false, index: 1, total: 6 }), 1);
   assert.equal(nextShapeIndex({ isComplete: true, index: 5, total: 6 }), 5);
+});
+
+test('해금 안내 문구는 받침에 따라 을/를을 붙인다', () => {
+  assert.equal(unlockHint(getShape(3)), '집을 완성하면 열려요');
+  assert.equal(unlockHint(getShape(0)), '동그라미를 완성하면 열려요');
 });

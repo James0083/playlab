@@ -1,5 +1,6 @@
-import type { PointerEvent, RefObject } from 'react';
+import { useEffect, useRef, type PointerEvent, type ReactNode, type RefObject } from 'react';
 import { Candy, CandyDefinitions } from './Candy.tsx';
+import { BrokenCandy, ShapeCutout, type FinaleKind } from './Finale.tsx';
 import { MAX_CRACKS, progressOf } from './rules.ts';
 import { formatPoints, type Point, type Shape } from './shapes.ts';
 import { distance } from './shapes.ts';
@@ -106,6 +107,10 @@ function crackPolyline(center: Point, index: number): string {
 interface BoardProps {
   shape: Shape;
   crackPoints: readonly Point[];
+  /** 끝나는 연출 중이면 그 종류(완성: 모양이 떠오름, 깨짐: 과자가 갈라짐) */
+  finale: FinaleKind | null;
+  /** 판 위에 겹쳐 보여줄 것(예: 카운트다운) */
+  overlay: ReactNode;
   elementsRef: RefObject<BoardElements>;
   onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
   onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
@@ -146,13 +151,24 @@ function Needle() {
   );
 }
 
-export function Board({ shape, crackPoints, elementsRef, ...handlers }: BoardProps) {
+export function Board({
+  shape,
+  crackPoints,
+  finale,
+  overlay,
+  elementsRef,
+  ...handlers
+}: BoardProps) {
   const cracks = crackPoints.length;
+  const board = useRef<SVGSVGElement>(null);
+
+  // 판이 나타나면 포커스를 옮겨 스크린리더가 안내(aria-label)를 읽게 한다
+  useEffect(() => board.current?.focus(), []);
 
   return (
     <div className="dg-board-wrap">
       <p className="dg-status">
-        <span aria-label={`균열 ${cracks}번, ${MAX_CRACKS}번이면 깨져요`}>
+        <span role="status" aria-label={`균열 ${cracks}번, ${MAX_CRACKS}번이면 깨져요`}>
           균열 {'●'.repeat(cracks)}
           {'○'.repeat(Math.max(MAX_CRACKS - cracks, 0))}
         </span>
@@ -167,7 +183,9 @@ export function Board({ shape, crackPoints, elementsRef, ...handlers }: BoardPro
       {/* 판 아래 그림자는 고정된 배경(CSS)으로 그린다. 계속 바뀌는 SVG에 필터를 걸면 모바일에서 느려진다 */}
       <div className="dg-board-frame">
         <svg
-          className="dg-board"
+          ref={board}
+          tabIndex={-1}
+          className={finale ? `dg-board dg-finale-${finale}` : 'dg-board'}
           viewBox="0 0 100 100"
           role="img"
           aria-label={`${shape.name} 달고나. 선을 따라 드래그해서 긁으세요`}
@@ -177,20 +195,27 @@ export function Board({ shape, crackPoints, elementsRef, ...handlers }: BoardPro
           onPointerCancel={handlers.onPointerUp}
         >
           <CandyDefinitions />
-          <Candy />
-          {/* 눌러 찍은 홈: 어두운 선 위에 밝은 선을 살짝 어긋나게 겹쳐 파인 것처럼 보이게 한다 */}
-          {shape.strokes.map((stroke, i) => (
-            <g key={i}>
-              <polyline className="dg-groove-light" points={formatPoints(stroke)} />
-              <polyline className="dg-groove-dark" points={formatPoints(stroke)} />
+          {finale === 'broken' ? (
+            <BrokenCandy shape={shape} />
+          ) : (
+            <g className="dg-board-content">
+              <Candy />
+              {/* 눌러 찍은 홈: 어두운 선 위에 밝은 선을 살짝 어긋나게 겹쳐 파인 것처럼 보이게 한다 */}
+              {shape.strokes.map((stroke, i) => (
+                <g key={i}>
+                  <polyline className="dg-groove-light" points={formatPoints(stroke)} />
+                  <polyline className="dg-groove-dark" points={formatPoints(stroke)} />
+                </g>
+              ))}
+              {/* 긁은 자국: extendTrail이 바늘이 지나간 경로를 따라 선을 덧붙인다 */}
+              <g
+                ref={(node) => {
+                  elementsRef.current.trail.layer = node;
+                }}
+              />
             </g>
-          ))}
-          {/* 긁은 자국: extendTrail이 바늘이 지나간 경로를 따라 선을 덧붙인다 */}
-          <g
-            ref={(node) => {
-              elementsRef.current.trail.layer = node;
-            }}
-          />
+          )}
+          {finale === 'complete' && <ShapeCutout shape={shape} />}
           {/* 금: 밝은 가장자리 위에 어두운 틈을 그려 깊이를 낸다 */}
           {crackPoints.map((point, i) => (
             <g key={i} className="dg-crack">
@@ -207,6 +232,7 @@ export function Board({ shape, crackPoints, elementsRef, ...handlers }: BoardPro
             <Needle />
           </g>
         </svg>
+        {overlay && <div className="dg-overlay">{overlay}</div>}
       </div>
     </div>
   );

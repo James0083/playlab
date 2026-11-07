@@ -3,13 +3,12 @@ import {
   GameShell,
   goHome,
   readStorage,
-  ScoreResult,
   unlockAudio,
   useGameSession,
   useHaptics,
   writeStorage,
 } from '@minigames/engine';
-import { useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import {
   Board,
   drawTrace,
@@ -28,6 +27,8 @@ import {
   TIME_LIMIT_MS,
   unlockAfterClear,
 } from './rules.ts';
+import type { FinaleKind } from './Finale.tsx';
+import { DalgonaResult, type Outcome } from './ResultDetails.tsx';
 import { ShapePicker } from './ShapePicker.tsx';
 import { getShape, SHAPES, type Point } from './shapes.ts';
 import { playBreak, playComplete, playCrack } from './sounds.ts';
@@ -38,14 +39,8 @@ const TITLE = '달고나 뽑기';
 const UNLOCK_KEY = 'dalgona:unlocked';
 const CRACK_VIBRATION = [30, 40, 30];
 const BREAK_VIBRATION = 200;
-
-type Outcome = 'complete' | 'broken' | 'timeout';
-
-const HEADLINES: Record<Outcome, string> = {
-  complete: '완성!',
-  broken: '깨졌어요!',
-  timeout: '시간 초과!',
-};
+/** 판이 끝난 뒤 결과 화면으로 넘어가기 전 연출 시간(ms). 모양이 떠오르거나 과자가 갈라지는 장면 */
+const FINALE_MS: Record<FinaleKind, number> = { complete: 1_200, broken: 1_000 };
 
 /** 포인터 이벤트 사이에 브라우저가 묶어 둔 중간 위치까지 모두 꺼낸다(빠른 드래그도 촘촘히 검사) */
 function pointerSamples(event: PointerEvent<SVGSVGElement>): MouseEvent[] {
@@ -63,6 +58,8 @@ export function DalgonaGame() {
   const [crackPoints, setCrackPoints] = useState<Point[]>([]);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [precision, setPrecision] = useState(1);
+  /** 끝나는 연출 중이면 그 종류. 연출 중에는 입력을 받지 않는다 */
+  const [finale, setFinale] = useState<FinaleKind | null>(null);
   // 긁는 동안 매 이벤트 바뀌는 값은 ref에 둔다(화면은 drawTrace가 직접 갱신)
   const trace = useRef<TraceState | null>(null);
   const needle = useRef<Point | null>(null);
@@ -72,15 +69,25 @@ export function DalgonaGame() {
     progress: null,
   });
   const shape = getShape(shapeIndex);
-  const { phase } = session;
+  const { phase, end } = session;
+
+  // 연출이 끝나면 결과 화면으로 넘어간다
+  useEffect(() => {
+    if (finale === null) return;
+    const id = setTimeout(end, FINALE_MS[finale]);
+    return () => clearTimeout(id);
+  }, [finale, end]);
 
   const handleSelect = (index: number) => {
     unlockAudio(); // 사용자 제스처 안에서 호출해야 iOS에서 소리가 난다
     setShapeIndex(index);
     setCrackPoints([]);
     setOutcome(null);
+    setFinale(null);
     trace.current = startTrace(getShape(index));
     needle.current = null;
+    // 이전 판에서 긁던 도중 끝났으면 자국 상태가 남아 있다. 새 판의 첫 획이 보이지 않는 문제를 막는다
+    endTrail(boardElements.current.trail);
     session.start();
   };
 
@@ -97,11 +104,12 @@ export function DalgonaGame() {
     }
     setPrecision(precisionOf(finished));
     setOutcome(result);
-    session.end();
+    endTrail(boardElements.current.trail);
+    setFinale(result === 'complete' ? 'complete' : 'broken');
   };
 
   const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' || finale) return;
     // 손가락이 판 밖으로 나가도 계속 이벤트를 받는다
     event.currentTarget.setPointerCapture(event.pointerId);
     needle.current = toBoardPoint(event.currentTarget, event.nativeEvent);
@@ -110,7 +118,7 @@ export function DalgonaGame() {
   const handlePointerMove = (event: PointerEvent<SVGSVGElement>) => {
     const before = trace.current;
     let from = needle.current;
-    if (phase !== 'playing' || !before || !from) return;
+    if (phase !== 'playing' || finale || !before || !from) return;
 
     let after = before;
     for (const sample of pointerSamples(event)) {
@@ -144,8 +152,12 @@ export function DalgonaGame() {
     total: SHAPES.length,
   });
 
+  const backToPicker = () => {
+    setFinale(null);
+    session.reset();
+  };
   // 모양 선택 화면에서는 홈으로, 그 외(카운트다운·플레이·결과)에서는 모양 선택으로 돌아간다
-  const handleBack = phase === 'idle' ? goHome : session.reset;
+  const handleBack = phase === 'idle' ? goHome : backToPicker;
 
   return (
     <GameShell
@@ -154,13 +166,20 @@ export function DalgonaGame() {
       onBack={handleBack}
     >
       {phase === 'idle' && (
-        <ShapePicker shapes={SHAPES} unlockedCount={unlockedCount} onSelect={handleSelect} />
+        <ShapePicker
+          slug={SLUG}
+          shapes={SHAPES}
+          unlockedCount={unlockedCount}
+          onSelect={handleSelect}
+        />
       )}
-      {phase === 'countdown' && <Countdown />}
-      {phase === 'playing' && (
+      {/* 카운트다운 중에도 판을 미리 보여준다(입력은 플레이가 시작돼야 받는다) */}
+      {(phase === 'countdown' || phase === 'playing') && (
         <Board
           shape={shape}
           crackPoints={crackPoints}
+          finale={finale}
+          overlay={phase === 'countdown' ? <Countdown /> : null}
           elementsRef={boardElements}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -168,17 +187,17 @@ export function DalgonaGame() {
         />
       )}
       {phase === 'result' && (
-        <ScoreResult
+        <DalgonaResult
           slug={SLUG}
-          title={`${TITLE} ${shape.name}`}
+          title={TITLE}
           score={session.score}
-          headline={HEADLINES[outcome ?? 'timeout']}
-          metadata={{ shape: shape.id, cracks: crackPoints.length, precision }}
+          shape={shape}
+          nextShape={nextIndex === shapeIndex ? null : getShape(nextIndex)}
+          outcome={outcome ?? 'timeout'}
+          precision={precision}
+          cracks={crackPoints.length}
           onRestart={() => handleSelect(nextIndex)}
-          restartLabel={
-            nextIndex === shapeIndex ? '다시 하기' : `다음: ${getShape(nextIndex).name}`
-          }
-          secondaryAction={{ label: '모양 고르기', onClick: session.reset }}
+          onPickShape={backToPicker}
         />
       )}
     </GameShell>
