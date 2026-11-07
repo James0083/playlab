@@ -4,26 +4,26 @@ import {
   bpmAt,
   idleBeatsAt,
   judge,
-  MAX_SCORE,
   nearestBeatIndex,
   malletHeight,
-  POINTS,
   scheduleBeats,
 } from './rules.ts';
 
-test('판정 경계: ±100 PERFECT, ±200 GOOD, 그 외 MISS', () => {
-  assert.equal(judge(0), 'PERFECT');
+test('판정 경계: ±40 GREAT, ±100 PERFECT, ±200 GOOD, 그 외 MISS', () => {
+  assert.equal(judge(0), 'GREAT');
+  assert.equal(judge(-40), 'GREAT');
+  assert.equal(judge(41), 'PERFECT');
   assert.equal(judge(-100), 'PERFECT');
   assert.equal(judge(101), 'GOOD');
   assert.equal(judge(-200), 'GOOD');
   assert.equal(judge(201), 'MISS');
 });
 
-test('BPM은 10초마다 5씩 오른다', () => {
+test('BPM은 10초마다 10씩 오른다 (60 → 110)', () => {
   assert.equal(bpmAt(0), 60);
   assert.equal(bpmAt(9_999), 60);
-  assert.equal(bpmAt(10_000), 65);
-  assert.equal(bpmAt(59_999), 85);
+  assert.equal(bpmAt(10_000), 70);
+  assert.equal(bpmAt(59_999), 110);
 });
 
 test('박자는 시간 범위 안에서 증가하고 간격이 줄어든다', () => {
@@ -59,11 +59,6 @@ test('탭한 직후에는 박자와 관계없이 떡메가 떡에 닿아 있다'
   const beats = [1000, 2000];
   assert.equal(malletHeight(beats, { elapsedMs: 1500, lastStrikeMs: 1450 }), 0);
   assert.equal(malletHeight(beats, { elapsedMs: 1500, lastStrikeMs: 1300 }), 1);
-});
-
-test('최고 점수는 모든 박자를 PERFECT로 맞힌 점수다 (마이그레이션 max_score와 같아야 함)', () => {
-  assert.equal(MAX_SCORE, scheduleBeats().length * POINTS.PERFECT);
-  assert.equal(MAX_SCORE, 144);
 });
 
 test('탭 없이 지나간 박자를 센다 (판정 구간이 끝나야 지나간 것)', () => {

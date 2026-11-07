@@ -2,7 +2,7 @@ import { scheduleNoise, scheduleTone } from '@minigames/engine';
 import type { Judgement } from './rules.ts';
 
 // 모든 효과음은 Web Audio로 합성한다. 음원 파일이 없어 라이선스 확인이 필요 없다.
-// "よーい" 음성은 쓰지 않고 말풍선으로 보여준다(cues.ts). 음성은 추후 추가 사항이다.
+// "요-이" 음성은 쓰지 않고 말풍선으로 보여준다(cues.ts). 음성은 추후 추가 사항이다.
 // 박자 안내는 배경음악의 북소리가 맡는다(music.ts).
 
 /** 떡을 치는 둔탁한 소리: 아래로 미끄러지는 저음 + 짧은 타격 잡음 */
@@ -12,6 +12,12 @@ function scheduleThud(output: AudioNode, { at, volume }: { at: number; volume: n
 }
 
 const HIT_SOUNDS: Record<Judgement, (output: AudioNode, at: number) => void> = {
+  GREAT: (output, at) => {
+    scheduleThud(output, { at, volume: 1 });
+    // 가장 정확할 때는 맑은 음 두 개를 겹쳐 PERFECT보다 화려하게 들리게 한다
+    scheduleTone(output, { at, frequency: 1_175, durationS: 0.18, volume: 0.14 });
+    scheduleTone(output, { at: at + 0.06, frequency: 1_568, durationS: 0.2, volume: 0.12 });
+  },
   PERFECT: (output, at) => {
     scheduleThud(output, { at, volume: 0.9 });
     // 정확히 맞혔을 때만 맑은 음을 얹어 GOOD과 구별되게 한다

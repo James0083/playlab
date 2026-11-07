@@ -16,8 +16,8 @@ export interface SceneElements {
 const HEAD_CENTER = { x: 150, y: 213 };
 const HEAD_LENGTH = 118;
 const HEAD_THICKNESS = 52;
-/** 가장 높이 들었을 때 올라가는 거리 */
-const MALLET_LIFT = 185;
+/** 가장 높이 들었을 때 올라가는 거리. 세운 머리(길이 118)가 장면 위로 잘리지 않는 높이 */
+const MALLET_LIFT = 150;
 /**
  * 가장 높이 들었을 때 기울기(시계 방향). 손잡이 쪽(오른쪽 위, 떡메를 든 사람)으로 젖혀지며 올라간다.
  * 반대 방향이면 머리가 사람 반대쪽으로 꺾여 부자연스럽다.

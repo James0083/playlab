@@ -1,19 +1,24 @@
 export const DURATION_MS = 60_000;
 /** 플랜에 시작 BPM이 없어 임시로 정한 값. 플레이테스트 후 조정한다. */
 export const BASE_BPM = 60;
-const BPM_STEP = 5;
+/** 10초마다 오르는 BPM. 끝으로 갈수록 확실히 빨라지도록 10씩 올린다(60 → 110) */
+const BPM_STEP = 10;
 /** 이 간격(ms)마다 BPM이 BPM_STEP씩 오른다 */
 export const BPM_STEP_MS = 10_000;
-/** 떡을 치는 순간(박자) 전후 이 범위(ms) 안에 탭하면 PERFECT */
+/** 떡을 치는 순간(박자) 전후 이 범위(ms) 안에 탭하면 GREAT(가장 좋은 판정). 실력 차이를 가르는 좁은 창 */
+export const GREAT_MS = 40;
+/** 이 범위 안이면 PERFECT */
 export const PERFECT_MS = 100;
 const GOOD_MS = 200;
 
-export type Judgement = 'PERFECT' | 'GOOD' | 'MISS';
+export type Judgement = 'GREAT' | 'PERFECT' | 'GOOD' | 'MISS';
 
-export const POINTS: Record<Judgement, number> = { PERFECT: 2, GOOD: 1, MISS: 0 };
+/** 판정별 기본 점수. 콤보 배율은 scoring.ts에서 곱한다 */
+export const POINTS: Record<Judgement, number> = { GREAT: 3, PERFECT: 2, GOOD: 1, MISS: 0 };
 
 export function judge(deltaMs: number): Judgement {
   const distance = Math.abs(deltaMs);
+  if (distance <= GREAT_MS) return 'GREAT';
   if (distance <= PERFECT_MS) return 'PERFECT';
   if (distance <= GOOD_MS) return 'GOOD';
   return 'MISS';
@@ -33,12 +38,6 @@ export function scheduleBeats(durationMs: number = DURATION_MS): number[] {
   }
   return beats;
 }
-
-/**
- * 이론상 최고 점수(모든 박자 PERFECT). Supabase games.max_score와 같아야 한다.
- * 시간·BPM·점수 규칙을 바꾸면 마이그레이션의 max_score도 바꾼다.
- */
-export const MAX_SCORE = scheduleBeats().length * POINTS.PERFECT;
 
 export function nearestBeatIndex(beats: readonly number[], elapsedMs: number): number {
   let best = 0;

@@ -20,19 +20,21 @@ import {
   judge,
   MAX_IDLE_BEATS,
   nearestBeatIndex,
-  POINTS,
   scheduleBeats,
   type Judgement,
 } from './rules.ts';
+import { ResultStats } from './ResultStats.tsx';
 import { Scene } from './Scene.tsx';
+import { comboMultiplier, initialScoreState, scoreTap, type ScoreState } from './scoring.ts';
 import { playHitSound } from './sounds.ts';
 
 const SLUG = 'tteokchigi';
-/** 시작 화면에서 떡메를 들어 올린 정도(0~1) */
-const PREVIEW_MALLET_HEIGHT = 0.8;
+/** 시작 화면에서 떡메를 들어 올린 정도(0~1). 끝까지 들어 올려 안내 문구와 겹치지 않게 한다 */
+const PREVIEW_MALLET_HEIGHT = 1;
 const TITLE = '떡치기';
 /** 판정별 진동 패턴(ms). MISS는 짧게 두 번 끊어 실패 느낌을 준다. */
 const VIBRATION: Record<Judgement, number | number[]> = {
+  GREAT: [30, 20, 40],
   PERFECT: 40,
   GOOD: 20,
   MISS: [10, 30, 10],
@@ -55,6 +57,9 @@ export function TteokchigiGame() {
   const usedBeats = useRef(new Set<number>());
   /** 마지막으로 탭한 게임 시각(ms). 떡메를 내리친 자세로 보여줄 때 쓴다 */
   const lastStrikeMs = useRef<number | null>(null);
+  /** 점수 계산 상태. 탭 처리에서 바로 읽어야 해서 ref에 두고, 화면 표시용으로 state에도 복사한다 */
+  const scoring = useRef<ScoreState>(initialScoreState());
+  const [stats, setStats] = useState<ScoreState>(initialScoreState);
   const [feedback, setFeedback] = useState<TapFeedback | null>(null);
   /** 반응이 없어 끝났는지. 결과 화면 문구에 쓴다 */
   const [endedIdle, setEndedIdle] = useState(false);
@@ -97,6 +102,8 @@ export function TteokchigiGame() {
     unlockAudio(); // 사용자 제스처 안에서 호출해야 iOS에서 소리가 난다
     setFeedback(null);
     setEndedIdle(false);
+    scoring.current = initialScoreState();
+    setStats(scoring.current);
     session.start();
   };
 
@@ -110,8 +117,16 @@ export function TteokchigiGame() {
     const result = usedBeats.current.has(index) ? 'MISS' : judge(elapsed - beats[index]!);
     if (result !== 'MISS') usedBeats.current.add(index);
 
-    session.addScore(POINTS[result]);
-    setFeedback((previous) => ({ id: (previous?.id ?? 0) + 1, judgement: result }));
+    const scored = scoreTap(scoring.current, { judgement: result, beatIndex: index });
+    scoring.current = scored.state;
+    setStats(scored.state);
+    session.addScore(scored.delta);
+    setFeedback((previous) => ({
+      id: (previous?.id ?? 0) + 1,
+      judgement: result,
+      combo: scored.state.combo,
+      multiplier: comboMultiplier(scored.state.combo),
+    }));
     vibrate(VIBRATION[result]);
     if (soundOutput.current) playHitSound(soundOutput.current, result);
   };
@@ -156,8 +171,10 @@ export function TteokchigiGame() {
           slug={SLUG}
           title={TITLE}
           score={session.score}
-          headline={endedIdle ? `${MAX_IDLE_BEATS}번 연속 치지 않아 끝났어요` : undefined}
-          onRestart={session.reset}
+          headline={endedIdle ? `${MAX_IDLE_BEATS}번 연속 치지 않아 끝났어요` : '완주!'}
+          details={<ResultStats stats={stats} />}
+          metadata={{ counts: stats.counts, maxCombo: stats.maxCombo }}
+          onRestart={handleStart}
         />
       )}
     </GameShell>

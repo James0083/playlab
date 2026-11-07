@@ -1,7 +1,7 @@
 import { bpmAt, BPM_STEP_MS, nearestBeatIndex, PERFECT_MS } from './rules.ts';
 
 /** 떡을 칠 때 외치는 소리. 떡메가 내려오는 동안 한 글자씩 드러난다. */
-export const CALL = 'よーい';
+export const CALL = '요-이';
 
 export interface CallState {
   /** 말풍선에 보일 글자. 빈 문자열이면 말풍선을 숨긴다 */
@@ -14,8 +14,8 @@ const HIDDEN: CallState = { text: '', isPeak: false };
 
 /**
  * 지금 시각의 말풍선 상태.
- * 떡메가 꼭대기에서 내려오기 시작하면 "よ" → "よー" → "よーい"로 늘어나고,
- * 떡을 치는 순간 전후 PERFECT 구간에서는 "よーい!"가 된다. 떡메를 들어 올리는 동안은 숨긴다.
+ * 떡메가 꼭대기에서 내려오기 시작하면 "요" → "요-" → "요-이"로 늘어나고,
+ * 떡을 치는 순간 전후 PERFECT 구간에서는 "요-이!"가 된다. 떡메를 들어 올리는 동안은 숨긴다.
  */
 export function callAt(beats: readonly number[], elapsedMs: number): CallState {
   const index = nearestBeatIndex(beats, elapsedMs);

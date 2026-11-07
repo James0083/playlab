@@ -51,17 +51,34 @@
   animation: tt-puff 450ms ease-out forwards;
 }
 
-/* 판정 문구와 속도 알림은 들어 올린 떡메(위)와 절구(아래) 사이 빈 공간에 띄운다 */
+/* 판정 문구와 콤보는 떡메가 지나가지 않는 절구 앞(아래쪽)에 고정한다. 떡메와 겹치면 읽기 어렵다 */
 .tt-judgement {
   position: absolute;
-  top: 46%;
+  bottom: 5%;
   left: 0;
   right: 0;
   text-align: center;
   font-size: 32px;
   font-weight: 800;
-  text-shadow: 0 2px 0 var(--mg-bg);
+  color: #fff;
+  -webkit-text-stroke: 1px #2e1907;
+  text-shadow: 0 3px 0 #2e1907;
   animation: tt-pop 400ms ease-out both;
+}
+.tt-judgement-great {
+  color: #ffd54a;
+}
+.tt-combo {
+  position: absolute;
+  bottom: 15%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 0 #2e1907;
+  animation: tt-pop 300ms ease-out both;
 }
 .tt-judgement-perfect {
   color: var(--mg-accent);
@@ -70,7 +87,7 @@
   color: var(--mg-muted);
 }
 
-/* よーい 말풍선: 떡메가 내려오는 동안 한 글자씩 늘어나고, 떡을 치는 순간 강조된다 */
+/* 요-이 말풍선: 떡메가 내려오는 동안 한 글자씩 늘어나고, 떡을 치는 순간 강조된다 */
 .tt-call {
   position: absolute;
   top: 30%;
@@ -116,7 +133,7 @@
 /* BPM이 오를 때 잠깐 뜨는 알림 */
 .tt-speed-up {
   position: absolute;
-  top: 56%;
+  top: 8px;
   left: 0;
   right: 0;
   text-align: center;
@@ -163,6 +180,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tt-judgement,
+  .tt-combo,
   .tt-mochi-hit,
   .tt-speed-up-visible {
     animation: none;
@@ -186,8 +204,9 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  /* 들어 올린 떡메(위)와 절구(아래) 사이 빈 공간에 놓는다 */
-  padding: 30% 0 20%;
+  /* 끝까지 들어 올린 떡메(위)와 절구(아래) 사이 빈 공간에 놓는다. 360px 폭에서도 떡과 겹치지 않게 위로 붙인다 */
+  justify-content: flex-start;
+  padding-top: 38%;
 }
 .tt-guide {
   margin: 0;
