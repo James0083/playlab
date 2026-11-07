@@ -52,39 +52,52 @@
 }
 
 /* 판정 문구와 콤보는 떡메가 지나가지 않는 절구 앞(아래쪽)에 고정한다. 떡메와 겹치면 읽기 어렵다 */
-.tt-judgement {
+/*
+ * 판정·콤보: 화면 위쪽 가운데. 뒤에 떡메·절구가 지나가도 글자가 섞이지 않게 불투명한 알약 모양 바탕 위에 쓴다.
+ * 예전에는 글자 테두리(text-stroke)와 아래로 밀린 그림자가 함께 있어 윤곽이 두 겹으로 보였다. 테두리 없이 바탕 대비로 읽히게 한다
+ */
+.tt-feedback {
   position: absolute;
-  bottom: 5%;
+  top: 12px;
   left: 0;
   right: 0;
-  text-align: center;
-  font-size: 32px;
-  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.tt-judgement,
+.tt-combo {
+  padding: 2px 16px;
+  border-radius: 999px;
+  background: rgb(46 25 7 / 0.82);
   color: #fff;
-  -webkit-text-stroke: 1px #2e1907;
-  text-shadow: 0 3px 0 #2e1907;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
   animation: tt-pop 400ms ease-out both;
+}
+.tt-judgement {
+  font-size: 26px;
+  letter-spacing: 0.04em;
+}
+.tt-combo {
+  padding: 1px 12px;
+  font-size: 15px;
+  animation-duration: 300ms;
 }
 .tt-judgement-great {
   color: #ffd54a;
 }
-.tt-combo {
-  position: absolute;
-  bottom: 15%;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 16px;
-  font-weight: 800;
-  color: #fff;
-  text-shadow: 0 2px 0 #2e1907;
-  animation: tt-pop 300ms ease-out both;
-}
 .tt-judgement-perfect {
-  color: var(--mg-accent);
+  color: #ffb27a;
+}
+.tt-judgement-good {
+  color: #fff;
 }
 .tt-judgement-miss {
-  color: var(--mg-muted);
+  color: #c9c2b8;
 }
 
 /* 요-이 말풍선: 떡메가 내려오는 동안 한 글자씩 늘어나고, 떡을 치는 순간 강조된다 */
@@ -133,9 +146,15 @@
 /* BPM이 오를 때 잠깐 뜨는 알림 */
 .tt-speed-up {
   position: absolute;
-  top: 8px;
+  /* 판정·콤보(위쪽) 아래에 뜬다 */
+  top: 96px;
   left: 0;
   right: 0;
+  width: max-content;
+  margin: 0 auto;
+  padding: 2px 14px;
+  border-radius: 999px;
+  background: var(--mg-bg);
   text-align: center;
   font-size: 18px;
   font-weight: 800;

@@ -74,20 +74,23 @@ export function PlayField({ elementsRef, feedback, onTap }: PlayFieldProps) {
       autoFocus
     >
       <Scene elementsRef={elementsRef} hitId={hitId} restHeight={START_MALLET_HEIGHT} />
-      {feedback && (
-        <span
-          key={feedback.id}
-          className={`tt-judgement tt-judgement-${feedback.judgement.toLowerCase()}`}
-          role="status"
-        >
-          {feedback.judgement}
-        </span>
-      )}
-      {feedback && feedback.combo >= 2 && (
-        <span key={`combo-${feedback.id}`} className="tt-combo" aria-hidden="true">
-          {feedback.combo} 콤보{feedback.multiplier > 1 && ` ×${feedback.multiplier}`}
-        </span>
-      )}
+      {/* 판정과 콤보는 화면 위쪽에 띄운다. 절구의 테·나뭇결 위에 겹치면 글자 윤곽과 섞여 보였다 */}
+      <div className="tt-feedback">
+        {feedback && (
+          <span
+            key={feedback.id}
+            className={`tt-judgement tt-judgement-${feedback.judgement.toLowerCase()}`}
+            role="status"
+          >
+            {feedback.judgement}
+          </span>
+        )}
+        {feedback && feedback.combo >= 2 && (
+          <span key={`combo-${feedback.id}`} className="tt-combo" aria-hidden="true">
+            {feedback.combo} 콤보{feedback.multiplier > 1 && ` ×${feedback.multiplier}`}
+          </span>
+        )}
+      </div>
       {/* 말풍선과 속도 알림은 매 프레임 바뀌므로 스크린리더에는 읽히지 않게 한다 */}
       <div
         ref={(node) => {
