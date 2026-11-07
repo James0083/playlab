@@ -6,6 +6,11 @@ interface GameShellProps {
   score?: number;
   remainingMs?: number | null;
   /**
+   * 남은 시간이 이 이하(ms)이면 빨갛게 맥동시켜 긴장감을 준다. 기본 10초.
+   * 플레이 시간이 짧은 게임(예: 10초)은 처음부터 빨갛지 않도록 줄인다.
+   */
+  urgentMs?: number;
+  /**
    * 뒤로 가기(헤더 버튼, ESC 키). 넘기지 않으면 버튼이 보이지 않는다.
    * 보통 플레이 중이면 시작 화면으로, 시작 화면이면 홈(goHome)으로 보낸다.
    */
@@ -13,10 +18,16 @@ interface GameShellProps {
   children: ReactNode;
 }
 
-/** 남은 시간이 이 이하이면 빨갛게 맥동시켜 긴장감을 준다 */
-const URGENT_MS = 10_000;
+const DEFAULT_URGENT_MS = 10_000;
 
-export function GameShell({ title, score, remainingMs, onBack, children }: GameShellProps) {
+export function GameShell({
+  title,
+  score,
+  remainingMs,
+  urgentMs = DEFAULT_URGENT_MS,
+  onBack,
+  children,
+}: GameShellProps) {
   const hasBack = onBack !== undefined;
   // 최신 onBack을 부르되, onBack이 바뀔 때마다 키 이벤트를 다시 구독하지 않는다
   const handleBack = useEffectEvent(() => onBack?.());
@@ -41,7 +52,7 @@ export function GameShell({ title, score, remainingMs, onBack, children }: GameS
         <h1 className="mg-title">{title}</h1>
         <div className="mg-hud">
           {remainingMs != null && (
-            <span className={remainingMs <= URGENT_MS ? 'mg-time mg-time-urgent' : 'mg-time'}>
+            <span className={remainingMs <= urgentMs ? 'mg-time mg-time-urgent' : 'mg-time'}>
               {Math.ceil(remainingMs / 1000)}초
             </span>
           )}

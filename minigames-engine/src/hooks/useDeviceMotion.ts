@@ -3,10 +3,11 @@ import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 export type MotionStatus = 'unsupported' | 'needs-permission' | 'granted' | 'denied';
 
 export interface MotionSample {
-  /** 중력 포함 가속도(m/s²) */
+  /** 중력 포함 가속도(m/s²). 센서 값이 없는 이벤트는 샘플로 보내지 않는다 */
   acceleration: { x: number; y: number; z: number };
   /** 기기 방향(도) */
   orientation: { alpha: number; beta: number; gamma: number };
+  /** 이벤트 시각(ms, performance.now와 같은 기준) */
   timestamp: number;
 }
 
@@ -55,8 +56,11 @@ export function useDeviceMotion(onSample: (sample: MotionSample) => void, enable
     };
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.accelerationIncludingGravity;
+      // 센서가 없는 기기(데스크톱 등)는 값이 모두 null인 이벤트를 보내기도 한다.
+      // 0으로 바꿔 보내면 "중력 없음 = 세게 흔듦"으로 읽히므로 샘플로 치지 않는다.
+      if (a?.x == null || a.y == null || a.z == null) return;
       emitSample({
-        acceleration: { x: a?.x ?? 0, y: a?.y ?? 0, z: a?.z ?? 0 },
+        acceleration: { x: a.x, y: a.y, z: a.z },
         orientation: { ...orientation },
         timestamp: e.timeStamp,
       });
