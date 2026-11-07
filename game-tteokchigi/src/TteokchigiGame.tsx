@@ -34,8 +34,8 @@ const PREVIEW_MALLET_HEIGHT = 1;
 const TITLE = '떡치기';
 /** 판정별 진동 패턴(ms). MISS는 짧게 두 번 끊어 실패 느낌을 준다. */
 const VIBRATION: Record<Judgement, number | number[]> = {
-  GREAT: [30, 20, 40],
-  PERFECT: 40,
+  PERFECT: [30, 20, 40],
+  GREAT: 40,
   GOOD: 20,
   MISS: [10, 30, 10],
 };

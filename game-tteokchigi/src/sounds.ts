@@ -12,13 +12,13 @@ function scheduleThud(output: AudioNode, { at, volume }: { at: number; volume: n
 }
 
 const HIT_SOUNDS: Record<Judgement, (output: AudioNode, at: number) => void> = {
-  GREAT: (output, at) => {
+  PERFECT: (output, at) => {
     scheduleThud(output, { at, volume: 1 });
-    // 가장 정확할 때는 맑은 음 두 개를 겹쳐 PERFECT보다 화려하게 들리게 한다
+    // 가장 정확할 때는 맑은 음 두 개를 겹쳐 GREAT보다 화려하게 들리게 한다
     scheduleTone(output, { at, frequency: 1_175, durationS: 0.18, volume: 0.14 });
     scheduleTone(output, { at: at + 0.06, frequency: 1_568, durationS: 0.2, volume: 0.12 });
   },
-  PERFECT: (output, at) => {
+  GREAT: (output, at) => {
     scheduleThud(output, { at, volume: 0.9 });
     // 정확히 맞혔을 때만 맑은 음을 얹어 GOOD과 구별되게 한다
     scheduleTone(output, { at, frequency: 880, durationS: 0.15, volume: 0.15 });

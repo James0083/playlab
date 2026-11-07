@@ -19,7 +19,7 @@ export function initialScoreState(): ScoreState {
     maxCombo: 0,
     missStreak: 0,
     lastHitBeat: null,
-    counts: { GREAT: 0, PERFECT: 0, GOOD: 0, MISS: 0 },
+    counts: { PERFECT: 0, GREAT: 0, GOOD: 0, MISS: 0 },
   };
 }
 
@@ -68,12 +68,12 @@ export function scoreTap(
 }
 
 /**
- * 이론상 최고 점수(모든 박자를 GREAT로, 콤보를 끊지 않고). Supabase games.max_score와 같아야 한다.
+ * 이론상 최고 점수(모든 박자를 PERFECT로, 콤보를 끊지 않고). Supabase games.max_score와 같아야 한다.
  * 시간·BPM·점수·콤보 규칙을 바꾸면 마이그레이션의 max_score도 바꾼다.
  */
 export const MAX_SCORE = scheduleBeats().reduce(
   (acc, _, beatIndex) => {
-    const { state, delta } = scoreTap(acc.state, { judgement: 'GREAT', beatIndex });
+    const { state, delta } = scoreTap(acc.state, { judgement: 'PERFECT', beatIndex });
     return { state, total: acc.total + delta };
   },
   { state: initialScoreState(), total: 0 },

@@ -5,21 +5,21 @@ export const BASE_BPM = 60;
 const BPM_STEP = 10;
 /** 이 간격(ms)마다 BPM이 BPM_STEP씩 오른다 */
 export const BPM_STEP_MS = 10_000;
-/** 떡을 치는 순간(박자) 전후 이 범위(ms) 안에 탭하면 GREAT(가장 좋은 판정). 실력 차이를 가르는 좁은 창 */
-export const GREAT_MS = 40;
-/** 이 범위 안이면 PERFECT */
-export const PERFECT_MS = 100;
+/** 떡을 치는 순간(박자) 전후 이 범위(ms) 안에 탭하면 PERFECT(가장 좋은 판정). 실력 차이를 가르는 좁은 창 */
+export const PERFECT_MS = 40;
+/** 이 범위 안이면 GREAT */
+export const GREAT_MS = 100;
 const GOOD_MS = 200;
 
-export type Judgement = 'GREAT' | 'PERFECT' | 'GOOD' | 'MISS';
+export type Judgement = 'PERFECT' | 'GREAT' | 'GOOD' | 'MISS';
 
 /** 판정별 기본 점수. 콤보 배율은 scoring.ts에서 곱한다 */
-export const POINTS: Record<Judgement, number> = { GREAT: 3, PERFECT: 2, GOOD: 1, MISS: 0 };
+export const POINTS: Record<Judgement, number> = { PERFECT: 3, GREAT: 2, GOOD: 1, MISS: 0 };
 
 export function judge(deltaMs: number): Judgement {
   const distance = Math.abs(deltaMs);
-  if (distance <= GREAT_MS) return 'GREAT';
   if (distance <= PERFECT_MS) return 'PERFECT';
+  if (distance <= GREAT_MS) return 'GREAT';
   if (distance <= GOOD_MS) return 'GOOD';
   return 'MISS';
 }

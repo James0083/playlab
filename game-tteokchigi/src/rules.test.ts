@@ -9,11 +9,11 @@ import {
   scheduleBeats,
 } from './rules.ts';
 
-test('판정 경계: ±40 GREAT, ±100 PERFECT, ±200 GOOD, 그 외 MISS', () => {
-  assert.equal(judge(0), 'GREAT');
-  assert.equal(judge(-40), 'GREAT');
-  assert.equal(judge(41), 'PERFECT');
-  assert.equal(judge(-100), 'PERFECT');
+test('판정 경계: ±40 PERFECT, ±100 GREAT, ±200 GOOD, 그 외 MISS', () => {
+  assert.equal(judge(0), 'PERFECT');
+  assert.equal(judge(-40), 'PERFECT');
+  assert.equal(judge(41), 'GREAT');
+  assert.equal(judge(-100), 'GREAT');
   assert.equal(judge(101), 'GOOD');
   assert.equal(judge(-200), 'GOOD');
   assert.equal(judge(201), 'MISS');
@@ -47,9 +47,9 @@ test('떡메는 박자에 떡에 닿고(0), 박자 사이 중간에 가장 높�
   assert.equal(at(1500), 1);
 });
 
-test('떡메는 떡에 가까울수록 빠르다 (PERFECT 구간 밖에서는 눈에 띄게 떠 있다)', () => {
+test('떡메는 떡에 가까울수록 빠르다 (GREAT 구간 밖에서는 눈에 띄게 떠 있다)', () => {
   const at = (elapsedMs: number) => malletHeight([1000, 2000], { elapsedMs, lastStrikeMs: null });
-  // 박자 120ms 전(PERFECT 범위 밖)에는 떡메가 최고 높이의 40% 이상 떠 있어야 한다
+  // 박자 120ms 전(GREAT 범위 밖)에는 떡메가 최고 높이의 40% 이상 떠 있어야 한다
   assert.ok(at(880) > 0.4);
   // 같은 시간(100ms) 동안 떡 근처에서 움직이는 거리가 꼭대기 근처보다 크다
   assert.ok(at(1100) - at(1000) > at(1500) - at(1400));

@@ -11,7 +11,7 @@ test('떡메가 내려오는 동안 요-이가 한 글자씩 드러난다', () =
   assert.equal(callAt(beats, 1_890).text, '요-이');
 });
 
-test('떡을 치는 순간 전후 PERFECT 구간에서는 강조된다', () => {
+test('떡을 치는 순간 전후 GREAT 구간에서는 강조된다', () => {
   assert.deepEqual(callAt(beats, 1_900), { text: '요-이!', isPeak: true });
   assert.deepEqual(callAt(beats, 2_100), { text: '요-이!', isPeak: true });
 });
