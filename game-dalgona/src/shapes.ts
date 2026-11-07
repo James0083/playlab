@@ -66,11 +66,6 @@ export function closestPointOnSegment(point: Point, [a, b]: Segment): Point {
   return lerp(a, b, Math.min(Math.max(t, 0), 1));
 }
 
-/** 점에서 선분까지의 최단 거리 */
-export function distanceToSegment(point: Point, segment: Segment): number {
-  return distance(point, closestPointOnSegment(point, segment));
-}
-
 /** 선을 따라 spacing 간격으로 점을 다시 찍는다. 꼭짓점 간격이 제각각이어도 체크포인트가 고르게 된다 */
 export function resample(stroke: Stroke, spacing: number): Point[] {
   const [first, ...rest] = stroke;
@@ -234,7 +229,7 @@ const UMBRELLA_HANDLE = [
 ];
 
 /** 쉬운 것부터. 이 순서대로 해금된다. 우산은 물결 3개와 J자 손잡이(열린 선)가 있어 가장 어렵다 */
-export const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
+const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
   {
     id: 'circle',
     name: '동그라미',
@@ -321,7 +316,7 @@ function buildPath(stroke: Stroke, strokeIndex: number) {
   };
 }
 
-export function buildShape(definition: ShapeDefinition): Shape {
+function buildShape(definition: ShapeDefinition): Shape {
   const built = definition.strokes.map(buildPath);
   return {
     ...definition,

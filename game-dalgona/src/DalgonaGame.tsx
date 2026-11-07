@@ -27,7 +27,7 @@ import {
   unlockAfterClear,
 } from './rules.ts';
 import type { FinaleKind } from './Finale.tsx';
-import { DalgonaResult, type Outcome } from './ResultDetails.tsx';
+import { DalgonaResult, type Outcome } from './DalgonaResult.tsx';
 import { ShapePicker } from './ShapePicker.tsx';
 import { getShape, SHAPES, type Point } from './shapes.ts';
 import { playBreak, playComplete, playCrack } from './sounds.ts';

@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   CHECKPOINT_SPACING,
+  closestPointOnSegment,
   distance,
-  distanceToSegment,
   isClosedStroke,
   resample,
   SHAPES,
@@ -25,13 +25,13 @@ test('선을 일정한 간격으로 다시 샘플링한다', () => {
   }
 });
 
-test('점과 선분 사이 거리', () => {
+test('선분 위에서 점과 가장 가까운 지점', () => {
   const segment = [
     { x: 0, y: 0 },
     { x: 10, y: 0 },
   ] as const;
-  assert.equal(distanceToSegment({ x: 5, y: 3 }, segment), 3);
-  assert.equal(distanceToSegment({ x: -4, y: 3 }, segment), 5); // 끝점 바깥은 끝점까지
+  assert.deepEqual(closestPointOnSegment({ x: 5, y: 3 }, segment), { x: 5, y: 0 });
+  assert.deepEqual(closestPointOnSegment({ x: -4, y: 3 }, segment), { x: 0, y: 0 }); // 끝점 바깥은 끝점
 });
 
 test('모든 모양은 달고나 판(반지름 46) 안에 있고 체크포인트가 촘촘하다', () => {

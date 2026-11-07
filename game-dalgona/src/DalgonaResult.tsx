@@ -11,7 +11,7 @@ interface ResultDetailsProps {
 }
 
 /** 결과 화면 기록: 뽑은 모양(또는 깨진 과자) 그림과 정확도·균열 수 */
-export function ResultDetails({ shape, kind, precision, cracks }: ResultDetailsProps) {
+function ResultDetails({ shape, kind, precision, cracks }: ResultDetailsProps) {
   return (
     <>
       <ResultArt shape={shape} kind={kind} />

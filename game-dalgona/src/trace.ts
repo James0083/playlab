@@ -135,10 +135,6 @@ export function cornersWithin(shape: Shape, span: PathSpan): Point[] {
   return corners.map((corner) => corner.point);
 }
 
-export function distanceToShape(shape: Shape, point: Point): number {
-  return nearestOnShape(shape, point).distance;
-}
-
 /** from에서 to까지를 SAMPLE_STEP 간격으로 쪼갠 지점들(from 제외, to 포함) */
 export function samplePath(from: Point, to: Point): Point[] {
   const steps = Math.max(Math.ceil(distance(from, to) / SAMPLE_STEP), 1);

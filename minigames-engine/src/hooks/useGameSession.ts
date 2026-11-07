@@ -18,8 +18,6 @@ export interface GameSession {
   score: number;
   /** 남은 시간(ms). 무한 콤보 방식이면 null. */
   remainingMs: number | null;
-  /** 플레이 시작 시각(performance.now 기준). 플레이 중이 아니면 null. */
-  startedAt: number | null;
   /** 카운트다운(준비) 단계에서 플레이를 바로 시작한다. countdownMs가 null일 때 쓴다 */
   begin: () => void;
   start: () => void;
@@ -66,7 +64,6 @@ export function useGameSession({
     phase,
     score: state.score,
     remainingMs: state.remainingMs,
-    startedAt: state.startedAt,
     ...actions,
   };
 }
