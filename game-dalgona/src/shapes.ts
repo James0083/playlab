@@ -19,11 +19,30 @@ export interface ShapeDefinition {
   strokes: readonly Stroke[];
 }
 
+/** 선 위의 위치: 몇 번째 선(strokes 순서)의, 선 시작점부터 선을 따라 잰 길이 */
+export interface PathPosition {
+  stroke: number;
+  arc: number;
+}
+
+export interface ShapePath {
+  /** 선을 따라 잰 전체 길이 */
+  length: number;
+  /** 닫힌 선이면 끝에서 시작으로 이어진다 */
+  isClosed: boolean;
+}
+
 export interface Shape extends ShapeDefinition {
   /** 반드시 긁고 지나가야 하는 점들. 윤곽선을 CHECKPOINT_SPACING 간격으로 나눈 것 */
   checkpoints: readonly Point[];
+  /** checkpoints와 같은 순서로, 각 체크포인트의 선 위 위치 */
+  checkpointPositions: readonly PathPosition[];
   /** 선과의 거리 계산에 쓰는 짧은 선분들 */
   segments: readonly Segment[];
+  /** segments와 같은 순서로, 각 선분 시작점의 선 위 위치 */
+  segmentPositions: readonly PathPosition[];
+  /** strokes와 같은 순서로, 선마다 길이와 닫힘 여부 */
+  paths: readonly ShapePath[];
 }
 
 /** 체크포인트 간격(보드 단위). 작을수록 촘촘히 긁어야 한다 */
@@ -123,16 +142,77 @@ function closed(points: Point[]): Point[] {
   return first ? [...points, first] : points;
 }
 
+interface Ellipse {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  /** 시계 방향 기울기(도) */
+  rotate: number;
+}
+
+/** 점이 타원 안에 있는지 */
+function isInsideEllipse({ cx, cy, rx, ry, rotate }: Ellipse, { x, y }: Point): boolean {
+  const tilt = (-rotate * Math.PI) / 180;
+  const [dx, dy] = [x - cx, y - cy];
+  const localX = dx * Math.cos(tilt) - dy * Math.sin(tilt);
+  const localY = dx * Math.sin(tilt) + dy * Math.cos(tilt);
+  return (localX / rx) ** 2 + (localY / ry) ** 2 < 1;
+}
+
+/** 타원 둘레 중 다른 타원들 밖에 있는 구간들(각도가 커지는 방향, 1° 간격) */
+function outsideArcs(ellipse: Ellipse, others: readonly Ellipse[]): Point[][] {
+  const ring = arc({ ...ellipse, from: 0, to: 359 });
+  const isOutside = ring.map((point) => !others.some((other) => isInsideEllipse(other, point)));
+  // 가려진 점에서 출발해야 한 구간이 0°를 넘어가도 둘로 쪼개지지 않는다
+  const start = isOutside.indexOf(false);
+  const runs: Point[][] = [];
+  let run: Point[] = [];
+  for (let i = 1; i <= ring.length; i++) {
+    const index = (start + i) % ring.length;
+    const point = ring[index];
+    if (isOutside[index] && point) {
+      run.push(point);
+    } else if (run.length > 0) {
+      runs.push(run);
+      run = [];
+    }
+  }
+  return runs;
+}
+
 /**
- * 토끼 실루엣: 머리와 두 귀를 한 줄로 잇는다(바깥 윤곽만).
- * 머리 아래쪽 → 왼쪽 귀 → 귀 사이 정수리 → 오른쪽 귀 → 다시 머리. 귀는 바깥으로 살짝 벌어진다.
+ * 겹친 타원들의 바깥 윤곽(합집합의 테두리)을 한 줄로 잇는다.
+ * 각 타원에서 다른 타원 밖에 있는 호를 구하고, 끝점에서 가장 가까운 다음 호를 이어 붙인다.
  */
-const RABBIT_HEAD = { cx: 50, cy: 63, rx: 16 };
-const RABBIT_OUTLINE = closed([
-  ...arc({ ...RABBIT_HEAD, from: -62, to: 242 }),
-  ...arc({ cx: 42, cy: 33, rx: 5.5, ry: 14, from: 100, to: 440, rotate: -12 }),
-  ...arc({ ...RABBIT_HEAD, from: 258, to: 282 }),
-  ...arc({ cx: 58, cy: 33, rx: 5.5, ry: 14, from: 100, to: 440, rotate: 12 }),
+function unionOutline(ellipses: readonly Ellipse[]): Point[] {
+  const pieces = ellipses.flatMap((ellipse) =>
+    outsideArcs(
+      ellipse,
+      ellipses.filter((other) => other !== ellipse),
+    ),
+  );
+  const outline = pieces.shift() ?? [];
+  while (pieces.length > 0) {
+    const end = outline.at(-1) ?? { x: 0, y: 0 };
+    let nearest = 0;
+    pieces.forEach((piece, i) => {
+      const best = pieces[nearest]?.[0] ?? end;
+      if (piece[0] && distance(end, piece[0]) < distance(end, best)) nearest = i;
+    });
+    outline.push(...pieces.splice(nearest, 1).flat());
+  }
+  return closed(outline);
+}
+
+/**
+ * 토끼 얼굴(쿠키 틀 모양): 옆으로 넓은 타원 머리 + 위로 길쭉한 두 귀.
+ * 귀 아랫부분을 머리 안으로 깊이 묻어, 귀와 머리가 만나는 곳이 안쪽으로 꺾인 홈이 된다.
+ */
+const RABBIT_OUTLINE = unionOutline([
+  { cx: 50, cy: 62, rx: 24, ry: 19, rotate: 0 },
+  { cx: 40, cy: 37, rx: 7.5, ry: 16, rotate: -12 },
+  { cx: 60, cy: 37, rx: 7.5, ry: 16, rotate: 12 },
 ]);
 
 /**
@@ -216,14 +296,40 @@ export const SHAPE_DEFINITIONS: readonly ShapeDefinition[] = [
   },
 ];
 
+/** 선 하나를 체크포인트와 선분으로 나눈다. 선분은 마지막 체크포인트에서 선의 끝점(닫힌 선은 시작점)까지 잇는다 */
+function buildPath(stroke: Stroke, strokeIndex: number) {
+  const checkpoints = resample(stroke, CHECKPOINT_SPACING);
+  const end = stroke.at(-1);
+  const last = checkpoints.at(-1);
+  const line =
+    end && last && distance(last, end) > CLOSED_TOLERANCE ? [...checkpoints, end] : checkpoints;
+  const arcs = [0];
+  const segments: Segment[] = [];
+  for (let i = 1; i < line.length; i++) {
+    const [a, b] = [line[i - 1], line[i]];
+    if (!a || !b) continue;
+    segments.push([a, b]);
+    arcs.push((arcs.at(-1) ?? 0) + distance(a, b));
+  }
+  const position = (i: number): PathPosition => ({ stroke: strokeIndex, arc: arcs[i] ?? 0 });
+  return {
+    checkpoints,
+    checkpointPositions: checkpoints.map((_, i) => position(i)),
+    segments,
+    segmentPositions: segments.map((_, i) => position(i)),
+    path: { length: arcs.at(-1) ?? 0, isClosed: isClosedStroke(stroke) },
+  };
+}
+
 export function buildShape(definition: ShapeDefinition): Shape {
-  const lines = definition.strokes.map((stroke) => resample(stroke, CHECKPOINT_SPACING));
+  const built = definition.strokes.map(buildPath);
   return {
     ...definition,
-    checkpoints: lines.flat(),
-    segments: lines.flatMap((line) =>
-      line.slice(1).map((point, i): Segment => [line[i] ?? point, point]),
-    ),
+    checkpoints: built.flatMap((part) => part.checkpoints),
+    checkpointPositions: built.flatMap((part) => part.checkpointPositions),
+    segments: built.flatMap((part) => part.segments),
+    segmentPositions: built.flatMap((part) => part.segmentPositions),
+    paths: built.map((part) => part.path),
   };
 }
 

@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { isBroken, isComplete, precisionOf } from './rules.ts';
 import { getShape, type Point, type Shape } from './shapes.ts';
-import { nearestOnShape, samplePath, startTrace, traceMove, type TraceState } from './trace.ts';
+import {
+  liftNeedle,
+  nearestOnShape,
+  samplePath,
+  startTrace,
+  traceMove,
+  type TraceState,
+} from './trace.ts';
 
 /** 점들을 차례로 이으며 긁는다 */
 function drag(shape: Shape, points: readonly Point[], state = startTrace(shape)): TraceState {
@@ -106,6 +113,37 @@ test('이미 긁은 곳을 다시 문질러도 정확도가 오르지 않는다'
   // 그 뒤 선 위를 여러 번 문지르기
   const rubbed = drag(circle, [...circle.checkpoints, ...circle.checkpoints], sloppy);
   assert.equal(precisionOf(rubbed), precisionOf(sloppy));
+});
+
+/** 각 체크포인트를 선의 수직 방향으로 offset만큼 옮긴 경로(선과 나란히 비켜 긁기) */
+function offsetPath(shape: Shape, offset: number): Point[] {
+  const points = shape.checkpoints;
+  return points.map((point, i) => {
+    const prev = points[i - 1] ?? points.at(-1)!;
+    const next = points[i + 1] ?? points[0]!;
+    const length = Math.hypot(next.x - prev.x, next.y - prev.y) || 1;
+    return {
+      x: point.x - ((next.y - prev.y) / length) * offset,
+      y: point.y + ((next.x - prev.x) / length) * offset,
+    };
+  });
+}
+
+test('토끼를 선 안쪽·바깥쪽으로 2단위 비켜 한 바퀴 돌아도 오목한 귀 밑까지 다 긁혀 완성된다 (99%에서 멈추던 문제)', () => {
+  const rabbit = getShape(4);
+  for (const offset of [2, -2]) {
+    const path = offsetPath(rabbit, offset);
+    const trace = drag(rabbit, [...path, path[0]!, path[1]!]);
+    assert.equal(trace.visitedCount, rabbit.checkpoints.length, `비켜 긁은 거리 ${offset}`);
+  }
+});
+
+test('손을 떼고 조금 앞에 다시 대면 그 사이는 긁힌 것이 아니다', () => {
+  const first = drag(circle, circle.checkpoints.slice(0, 5));
+  const lifted = liftNeedle(first);
+  const resumed = drag(circle, circle.checkpoints.slice(7, 12), lifted);
+  assert.equal(resumed.visited[5], false);
+  assert.equal(resumed.visited[6], false);
 });
 
 test('우산 물결을 직선으로 지나가면 완성되지 않는다', () => {

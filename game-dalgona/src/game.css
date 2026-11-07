@@ -104,15 +104,27 @@
 .dg-board:focus {
   outline: none;
 }
-/* 판 위에 겹치는 카운트다운 */
+/* 판 위에 겹치는 시작 안내. 판을 가리지 않게 아래쪽에 작게 띄운다 */
 .dg-overlay {
   position: absolute;
-  inset: 0;
+  inset: auto 0 6%;
   display: flex;
-  align-items: center;
   justify-content: center;
   pointer-events: none;
-  text-shadow: 0 2px 0 var(--mg-bg);
+}
+.dg-ready {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-weight: 700;
+  animation: dg-ready-pulse 1.4s ease-in-out infinite;
+}
+@keyframes dg-ready-pulse {
+  50% {
+    opacity: 0.6;
+  }
 }
 /* 판이 바닥에 놓인 듯한 그림자 */
 .dg-board-frame::before {
@@ -128,6 +140,7 @@
 .dg-board {
   position: relative;
   display: block;
+  overflow: visible; /* 뽑아낸 조각이 판 아래로 떨어지는 모습이 잘리지 않게 */
   width: 100%;
   aspect-ratio: 1;
   touch-action: none; /* 드래그가 스크롤·확대로 해석되지 않게 한다 */
@@ -191,7 +204,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dg-crack {
+  .dg-crack,
+  .dg-ready {
     animation: none;
   }
 }
@@ -202,28 +216,25 @@
 .dg-finale-broken .dg-needle {
   opacity: 0;
 }
-/* 완성: 판이 흐려지고 뽑아낸 모양이 떠오른다 */
-.dg-finale-complete .dg-board-content {
-  opacity: 0.35;
-  transition: opacity 400ms;
-}
-.dg-cutout-fill {
-  fill: url(#dg-candy-dome);
+/* 완성: 모양대로 구멍이 난 판에서 조각이 살짝 들렸다가 아래로 빠져 떨어진다 */
+.dg-hole-rim polyline {
+  fill: none;
   stroke: var(--dg-candy-rim);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.dg-piece-edge polyline {
+  fill: none;
+  stroke: var(--dg-candy-edge);
   stroke-width: 0.8;
   stroke-linejoin: round;
-}
-.dg-cutout-stick {
-  fill: none;
-  stroke: var(--dg-candy);
-  stroke-width: 4;
   stroke-linecap: round;
-  stroke-linejoin: round;
 }
-.dg-finale-complete .dg-cutout {
+.dg-piece-falling {
   transform-box: fill-box;
   transform-origin: 50% 50%;
-  animation: dg-cutout-pop 700ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation: dg-piece-fall 1100ms cubic-bezier(0.5, 0, 0.75, 0) both;
   filter: drop-shadow(0 3px 2px rgb(0 0 0 / 0.35));
 }
 /* 깨짐: 과자가 지그재그 선을 따라 두 조각으로 벌어진다 */
@@ -240,19 +251,24 @@
 
 /* 결과 화면 그림 */
 .dg-result-art {
-  width: 140px;
-  height: 140px;
+  width: 160px;
+  height: 160px;
 }
-.dg-result-art .dg-cutout {
-  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 0.3));
+.dg-piece-fallen {
+  filter: drop-shadow(0 2px 1.5px rgb(0 0 0 / 0.35));
 }
 
-@keyframes dg-cutout-pop {
-  from {
-    transform: scale(1);
+/* 들렸다가(0~30%) 기울며 판 아래로 떨어진다 */
+@keyframes dg-piece-fall {
+  0% {
+    transform: none;
   }
-  to {
-    transform: translateY(-4px) scale(1.08);
+  30% {
+    transform: translateY(-3px) scale(1.04);
+  }
+  100% {
+    transform: translate(6px, 60px) rotate(16deg) scale(0.9);
+    opacity: 0;
   }
 }
 @keyframes dg-split-left {
@@ -267,7 +283,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dg-finale-complete .dg-cutout,
+  .dg-piece-falling,
   .dg-half-left,
   .dg-half-right {
     animation: none;

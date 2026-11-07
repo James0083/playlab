@@ -1,17 +1,24 @@
 import { useEffect, useRef, type PointerEvent, type ReactNode, type RefObject } from 'react';
 import { Candy, CandyDefinitions } from './Candy.tsx';
-import { BrokenCandy, ShapeCutout, type FinaleKind } from './Finale.tsx';
+import { BrokenCandy, HoledCandy, ShapePiece, type FinaleKind } from './Finale.tsx';
 import { MAX_CRACKS, progressOf } from './rules.ts';
-import { formatPoints, type Point, type Shape } from './shapes.ts';
-import { distance } from './shapes.ts';
-import { nearestOnShape, samplePath, VISIT_RADIUS, type TraceState } from './trace.ts';
+import { distance, formatPoints, type PathPosition, type Point, type Shape } from './shapes.ts';
+import {
+  cornersWithin,
+  nearestOnShape,
+  pathSpan,
+  samplePath,
+  VISIT_RADIUS,
+  type TraceState,
+} from './trace.ts';
 
 /** 긁은 자국(흰 선)을 그리는 상태. 이어 긋는 동안 같은 선에 점을 덧붙인다 */
 export interface ScratchTrail {
   layer: SVGGElement | null;
   /** 지금 이어 그리는 선. 손을 떼거나 선에서 벗어나면 null이 되고 다음에 새 선을 시작한다 */
   current: SVGPolylineElement | null;
-  last: Point | null;
+  /** 마지막으로 덧붙인 점과 그 선 위 위치 */
+  last: { point: Point; position: PathPosition } | null;
 }
 
 /** 긁을 때마다 직접 갱신하는 요소들. React 상태로 다루면 포인터가 움직일 때마다 전체를 다시 그린다 */
@@ -21,37 +28,48 @@ export interface BoardElements {
   progress: HTMLSpanElement | null;
 }
 
-/** 직전 자국에서 이보다 멀리 떨어진 지점은 이어 긋지 않고 새 선으로 시작한다(다른 변으로 건너뛴 경우) */
-const TRAIL_MAX_STEP = 3;
 /** 이보다 가까운 지점은 덧붙이지 않는다(같은 자리를 문지를 때 점이 쌓이지 않게) */
 const TRAIL_MIN_STEP = 0.4;
 
+function appendPoint(trail: ScratchTrail, point: Point): void {
+  const svg = trail.layer?.ownerSVGElement;
+  if (!trail.current || !svg) return;
+  const svgPoint = svg.createSVGPoint();
+  svgPoint.x = point.x;
+  svgPoint.y = point.y;
+  trail.current.points.appendItem(svgPoint);
+}
+
+function startPolyline(trail: ScratchTrail): void {
+  trail.current = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  trail.current.setAttribute('class', 'dg-trail');
+  trail.layer?.append(trail.current);
+}
+
 /**
  * 바늘이 from에서 to로 지나간 경로를 따라 긁은 자국을 늘린다.
- * 경로를 1단위로 쪼개 선 가까이(VISIT_RADIUS 안)를 지난 지점만, 윤곽선 위로 옮겨 이어 긋는다.
+ * 경로를 1단위로 쪼개 선 가까이(VISIT_RADIUS 안)를 지난 지점만 윤곽선 위로 옮기고,
+ * 직전 지점과 선을 따라 이어지면(trace.ts의 pathSpan) 그 사이 모서리를 거쳐 이어 긋는다.
+ * 판정과 같은 규칙이라 흰 선이 이어진 곳이 곧 긁힌 곳이다.
  */
 export function extendTrail(trail: ScratchTrail, shape: Shape, move: { from: Point; to: Point }) {
-  const svg = trail.layer?.ownerSVGElement;
-  if (!trail.layer || !svg) return;
+  if (!trail.layer) return;
   for (const sample of samplePath(move.from, move.to)) {
     const nearest = nearestOnShape(shape, sample);
     if (nearest.distance > VISIT_RADIUS) {
       endTrail(trail);
       continue;
     }
-    const step = trail.last ? distance(trail.last, nearest.point) : 0;
-    if (!trail.current || step > TRAIL_MAX_STEP) {
-      trail.current = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-      trail.current.setAttribute('class', 'dg-trail');
-      trail.layer.append(trail.current);
-    } else if (step < TRAIL_MIN_STEP) {
+    const span = trail.last && pathSpan(shape, trail.last.position, nearest.position);
+    if (!trail.current || !span) {
+      startPolyline(trail);
+    } else if (distance(trail.last?.point ?? nearest.point, nearest.point) < TRAIL_MIN_STEP) {
       continue;
+    } else {
+      cornersWithin(shape, span).forEach((corner) => appendPoint(trail, corner));
     }
-    const point = svg.createSVGPoint();
-    point.x = nearest.point.x;
-    point.y = nearest.point.y;
-    trail.current.points.appendItem(point);
-    trail.last = nearest.point;
+    appendPoint(trail, nearest.point);
+    trail.last = { point: nearest.point, position: nearest.position };
   }
 }
 
@@ -104,12 +122,15 @@ function crackPolyline(center: Point, index: number): string {
   );
 }
 
+/** 판 안의 마스크·잘라내기 id 앞머리 */
+const BOARD_ID = 'dg-board';
+
 interface BoardProps {
   shape: Shape;
   crackPoints: readonly Point[];
-  /** 끝나는 연출 중이면 그 종류(완성: 모양이 떠오름, 깨짐: 과자가 갈라짐) */
+  /** 끝나는 연출 중이면 그 종류(완성: 모양이 빠져 떨어짐, 깨짐: 과자가 갈라짐) */
   finale: FinaleKind | null;
-  /** 판 위에 겹쳐 보여줄 것(예: 카운트다운) */
+  /** 판 위에 겹쳐 보여줄 것(예: 시작 안내) */
   overlay: ReactNode;
   elementsRef: RefObject<BoardElements>;
   onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
@@ -195,10 +216,17 @@ export function Board({
           onPointerCancel={handlers.onPointerUp}
         >
           <CandyDefinitions />
-          {finale === 'broken' ? (
-            <BrokenCandy shape={shape} />
-          ) : (
-            <g className="dg-board-content">
+          {finale === 'broken' && <BrokenCandy shape={shape} idPrefix={BOARD_ID} />}
+          {finale === 'complete' && (
+            <>
+              <HoledCandy shape={shape} idPrefix={BOARD_ID} />
+              <g className="dg-piece-falling">
+                <ShapePiece shape={shape} idPrefix={BOARD_ID} />
+              </g>
+            </>
+          )}
+          {finale === null && (
+            <g>
               <Candy />
               {/* 눌러 찍은 홈: 어두운 선 위에 밝은 선을 살짝 어긋나게 겹쳐 파인 것처럼 보이게 한다 */}
               {shape.strokes.map((stroke, i) => (
@@ -215,7 +243,6 @@ export function Board({
               />
             </g>
           )}
-          {finale === 'complete' && <ShapeCutout shape={shape} />}
           {/* 금: 밝은 가장자리 위에 어두운 틈을 그려 깊이를 낸다 */}
           {crackPoints.map((point, i) => (
             <g key={i} className="dg-crack">
