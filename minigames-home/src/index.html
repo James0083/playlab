@@ -74,6 +74,13 @@
         color: var(--muted);
         font-size: 14px;
       }
+      .best {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #b4560b;
+      }
     </style>
   </head>
   <body>
@@ -84,5 +91,24 @@
         <!--GAMES-->
       </ul>
     </main>
+    <script>
+      // 이 기기에 저장된 내 최고기록을 카드에 보여준다(게임이 localStorage에 minigames:best:<slug>[:<보드>]로 저장).
+      // 달고나처럼 보드(모양)가 여러 개면 그중 가장 높은 점수를 보여준다.
+      try {
+        for (const badge of document.querySelectorAll('[data-best-slug]')) {
+          const prefix = 'minigames:best:' + badge.dataset.bestSlug;
+          let best = 0;
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key === prefix || key.startsWith(prefix + ':')) {
+              best = Math.max(best, Number(localStorage.getItem(key)) || 0);
+            }
+          }
+          if (best > 0) badge.textContent = '내 최고 ' + best + '점';
+        }
+      } catch {
+        // 저장소를 쓸 수 없으면(사생활 보호 모드 등) 기록 없이 보여준다
+      }
+    </script>
   </body>
 </html>

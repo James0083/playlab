@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>찾을 수 없어요</title>
+    <style>
+      :root {
+        --bg: #faf6ef;
+        --text: #2a241c;
+        --muted: #6f6557;
+        --accent: #b4560b;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1f1b16;
+          --text: #f5efe6;
+          --muted: #b5aa9a;
+          --accent: #ffb454;
+        }
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Apple SD Gothic Neo',
+          sans-serif;
+        text-align: center;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+      a {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 20px;
+        border-radius: 12px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>찾을 수 없는 페이지예요</h1>
+    <p>주소가 바뀌었거나 아직 준비 중인 게임이에요.</p>
+    <a href="/">홈으로</a>
+  </body>
+</html>

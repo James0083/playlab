@@ -3,14 +3,14 @@
 //   /games/<slug>/    → 게임 Vite 개발 서버 (코드 수정 시 바로 반영)
 // 실행: pnpm dev
 import { spawn, execFileSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const FRONT_PORT = Number(process.env.PORT ?? 5173);
-/** 게임 개발 서버는 이 번호부터 차례로 쓴다 */
-const FIRST_GAME_PORT = 5201;
+/** 게임 개발 서버는 이 번호부터 차례로 쓴다(GAME_PORT로 바꿀 수 있다. 서버를 두 개 띄울 때) */
+const FIRST_GAME_PORT = Number(process.env.GAME_PORT ?? 5201);
 
 const run = (args, env = {}) =>
   execFileSync('pnpm', args, { cwd: ROOT, stdio: 'inherit', env: { ...process.env, ...env } });
@@ -40,6 +40,25 @@ const front = await createServer({
   root: `${ROOT}/minigames-home/dist`,
   appType: 'mpa',
   logLevel: 'warn',
+  plugins: [
+    {
+      // 없는 경로는 배포 환경(Worker의 not_found_handling)과 같이 홈의 404.html을 돌려준다
+      name: 'playlab-not-found',
+      configureServer(server) {
+        return () => {
+          server.middlewares.use((request, response, next) => {
+            // 홈 빌드 결과에 실제로 있는 파일(예: /, /index.html)은 Vite가 그대로 제공하게 둔다
+            const path = new URL(request.url ?? '/', 'http://localhost').pathname;
+            const file = `${ROOT}/minigames-home/dist${path.endsWith('/') ? `${path}index.html` : path}`;
+            if (existsSync(file)) return next();
+            response.statusCode = 404;
+            response.setHeader('content-type', 'text/html; charset=utf-8');
+            response.end(readFileSync(`${ROOT}/minigames-home/dist/404.html`));
+          });
+        };
+      },
+    },
+  ],
   server: {
     port: FRONT_PORT,
     strictPort: true,

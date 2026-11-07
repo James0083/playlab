@@ -12,7 +12,8 @@ function cardBody(game: Game, playable: boolean): string {
   const suffix = playable ? '' : ' (준비 중)';
   return `
   <span class="emoji" aria-hidden="true">${game.emoji}</span>
-  <span><span class="name">${game.name}</span>${suffix}<br><span class="desc">${game.description}</span></span>`;
+  <span><span class="name">${game.name}</span>${suffix}<br><span class="desc">${game.description}</span>
+  <span class="best" data-best-slug="${game.slug}"></span></span>`;
 }
 
 /** 게임 목록을 HTML로 만든다. 들어갈 수 없는 게임은 링크 없이 흐리게 보인다 */

@@ -17,3 +17,8 @@ const dist = new URL('../dist/', import.meta.url);
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
 await writeFile(new URL('index.html', dist), html);
+// 없는 경로용 페이지. Worker는 not_found_handling = "404-page"로, pnpm dev는 직접 이 파일을 돌려준다
+await writeFile(
+  new URL('404.html', dist),
+  await readFile(new URL('../src/404.html', import.meta.url)),
+);

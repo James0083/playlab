@@ -7,6 +7,8 @@ directory = "./dist"
 binding = "ASSETS"
 # 홈 정적 파일은 Worker를 거치지 않아 일일 요청 한도를 쓰지 않는다.
 run_worker_first = ["/games/*"]
+# 없는 경로(없는 게임 포함)는 dist/404.html("홈으로" 링크)을 404 상태로 돌려준다
+not_found_handling = "404-page"
 
 # 도메인을 구매하고 Cloudflare에 추가한 뒤 주석을 해제한다.
 # [[routes]]

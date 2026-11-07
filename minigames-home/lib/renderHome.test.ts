@@ -21,3 +21,8 @@ test('들어갈 수 있는 게임은 링크, 아닌 게임은 준비 중으로 �
 test('자리표시자가 없는 템플릿은 오류를 낸다', () => {
   assert.throws(() => renderHome('<ul></ul>', GAMES, { isPlayable: () => true }));
 });
+
+test('카드마다 내 최고기록을 채울 자리가 있다', () => {
+  const html = renderHome(template, GAMES, { isPlayable: () => true });
+  assert.match(html, /data-best-slug="tteokchigi"/);
+});
