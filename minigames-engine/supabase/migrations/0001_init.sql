@@ -101,7 +101,7 @@ grant execute on function public.get_top10(text, text) to anon, authenticated;
 
 -- max_score: 떡치기는 game-tteokchigi/src/scoring.ts의 MAX_SCORE(84박자 모두 PERFECT + 콤보 배율)와 같아야 한다.
 -- 달고나는 game-dalgona/src/rules.ts의 MAX_SCORE(우산 기준 점수 800)와 같아야 한다.
--- 버블티는 game-bubble-tea/src/rules.ts의 MAX_SCORE(섞임 100 + 고르기 30 + 넘치지 않음 20)와 같아야 한다.
+-- 버블티는 game-bubble-tea/src/rules.ts의 MAX_SCORE(섞임 100 + 적정 세기 30 + 넘치지 않음 20)와 같아야 한다.
 -- 나머지 게임은 규칙이 정해지면 채운다(null이면 상한 검사를 하지 않는다).
 insert into public.games (slug, name, description, max_score) values
   ('tteokchigi', '떡치기', '떡메가 떡에 닿는 순간 탭', 642),

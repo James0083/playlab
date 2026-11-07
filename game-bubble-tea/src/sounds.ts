@@ -41,6 +41,32 @@ export function playSpill(): void {
   });
 }
 
+/**
+ * 넘치기 직전 경고 "출렁": 낮게 미끄러지는 두 음. 흔드는 동안은 화면을 볼 수 없어
+ * 경고 구간에 들어가는 순간을 소리로 알린다
+ */
+export function playWarning(): void {
+  const out = speaker();
+  if (!out) return;
+  [0, 0.09].forEach((offsetS) => {
+    scheduleTone(out.output, {
+      at: out.now + offsetS,
+      frequency: 520,
+      endFrequency: 300,
+      durationS: 0.08,
+      volume: 0.25,
+      type: 'square',
+    });
+  });
+}
+
+/** 다 섞였을 때(100%) "띵": 맑은 음 하나(A6) */
+export function playFullyMixed(): void {
+  const out = speaker();
+  if (!out) return;
+  scheduleTone(out.output, { at: out.now, frequency: 1_760, durationS: 0.35, volume: 0.2 });
+}
+
 /** 빨대를 꽂는 "뽁" + 완성 효과음(올라가는 두 음: C6 E6) */
 export function playFinish(): void {
   const out = speaker();

@@ -1,37 +1,30 @@
 import type { CSSProperties, RefObject } from 'react';
-import { MAX_INTENSITY, WARNING_INTENSITY } from './rules.ts';
+import { createHudElements, HudTop, WarningPill, type HudElements } from './Hud.tsx';
+import { MAX_INTENSITY, SPILL_PENALTY } from './rules.ts';
 
 // 버블티 쉐이커 컵(SVG). 좌표는 viewBox(200×300) 기준이고 빛은 왼쪽 위에서 온다.
 // 흔드는 동안 바뀌는 값(컵 흔들림, 섞인 색, 펄 튐, 게이지)은 drawCup이 매 프레임 직접 갱신한다.
 
 /** 매 프레임 직접 갱신하는 요소. React 상태로 다루면 센서 이벤트마다(초당 60번) 다시 렌더링한다 */
-export interface CupElements {
+export interface CupElements extends HudElements {
   shaker: SVGGElement | null;
   mixLayer: SVGRectElement | null;
   pearls: (SVGCircleElement | null)[];
-  meterFill: HTMLSpanElement | null;
-  meterText: HTMLSpanElement | null;
-  warning: HTMLParagraphElement | null;
 }
 
 export function createCupElements(): CupElements {
-  return {
-    shaker: null,
-    mixLayer: null,
-    pearls: [],
-    meterFill: null,
-    meterText: null,
-    warning: null,
-  };
+  return { ...createHudElements(), shaker: null, mixLayer: null, pearls: [] };
 }
 
 export interface CupFrame {
-  /** 지금 흔드는 세기(부드럽게 만든 값) */
+  /** 지금 흔드는 세기(포락선). 컵 흔들림과 펄 튐의 크기 */
   intensity: number;
   /** 섞인 정도(0~1) */
   mix: number;
   /** 애니메이션 시각(ms) */
   timeMs: number;
+  /** 움직임 배율. 동작 줄이기 설정이면 0으로 넘겨 컵을 흔들지 않는다 */
+  motionScale: number;
 }
 
 /** 가장 세게 흔들 때 컵이 기우는 각도(도)와 좌우로 움직이는 거리 */
@@ -43,9 +36,12 @@ const MAX_PEARL_BOUNCE = 70;
 const SWAY_PERIOD_MS = 140;
 const BOUNCE_PERIOD_MS = 260;
 
-/** 한 프레임을 그린다: 컵 흔들림, 섞인 색, 펄, 섞임 게이지, 넘침 경고 */
-export function drawCup(elements: CupElements, { intensity, mix, timeMs }: CupFrame): void {
-  const strength = Math.min(intensity / MAX_INTENSITY, 1);
+/** 한 프레임을 그린다: 컵 흔들림, 섞인 색, 펄. 게이지·경고는 drawHud가 그린다 */
+export function drawCup(
+  elements: CupElements,
+  { intensity, mix, timeMs, motionScale }: CupFrame,
+): void {
+  const strength = Math.min(intensity / MAX_INTENSITY, 1) * motionScale;
   const wave = Math.sin((timeMs / SWAY_PERIOD_MS) * Math.PI * 2);
   elements.shaker?.setAttribute(
     'transform',
@@ -58,13 +54,6 @@ export function drawCup(elements: CupElements, { intensity, mix, timeMs }: CupFr
     const bounce = Math.abs(Math.sin(phase)) * MAX_PEARL_BOUNCE * strength;
     pearl?.setAttribute('transform', `translate(0 ${-bounce})`);
   });
-
-  const percent = `${Math.floor(mix * 100)}%`;
-  if (elements.meterText && elements.meterText.textContent !== percent) {
-    elements.meterText.textContent = percent;
-  }
-  if (elements.meterFill) elements.meterFill.style.transform = `scaleX(${mix})`;
-  elements.warning?.classList.toggle('bt-warning-visible', intensity >= WARNING_INTENSITY);
 }
 
 /** 컵 바닥의 펄 위치 */
@@ -112,26 +101,8 @@ export function Cup({ elementsRef, spills, isFinished }: CupProps) {
   const teaTop = TEA_TOP + Math.min(spills * SPILL_LEVEL_DROP, MAX_LEVEL_DROP);
 
   return (
-    <div className="bt-cup-wrap">
-      <p className="bt-meter" aria-hidden="true">
-        <span>섞임</span>
-        <span className="bt-meter-track">
-          <span
-            ref={(node) => {
-              elementsRef.current.meterFill = node;
-            }}
-            className="bt-meter-fill"
-          />
-        </span>
-        <span
-          ref={(node) => {
-            elementsRef.current.meterText = node;
-          }}
-          className="bt-meter-text"
-        >
-          0%
-        </span>
-      </p>
+    <span className="bt-cup-wrap">
+      <HudTop elementsRef={elementsRef} />
       <svg className="bt-cup" viewBox="0 0 200 300" aria-hidden="true">
         <CupDefinitions />
         <ellipse cx={100} cy={292} rx={64} ry={7} fill="url(#bt-floor-shadow)" />
@@ -179,6 +150,10 @@ export function Cup({ elementsRef, spills, isFinished }: CupProps) {
         </g>
         {spills > 0 && (
           <g key={spills} className="bt-droplets">
+            {/* 넘칠 때마다 잃은 점수를 컵 입구에 띄운다 */}
+            <text className="bt-penalty" x={100} y={44} textAnchor="middle">
+              −{SPILL_PENALTY}
+            </text>
             {DROPLETS.map(({ x, dx, dy }, i) => (
               <circle
                 key={i}
@@ -192,16 +167,8 @@ export function Cup({ elementsRef, spills, isFinished }: CupProps) {
           </g>
         )}
       </svg>
-      <p
-        ref={(node) => {
-          elementsRef.current.warning = node;
-        }}
-        className="bt-warning"
-        aria-hidden="true"
-      >
-        살살! 넘쳐요
-      </p>
-    </div>
+      <WarningPill elementsRef={elementsRef} />
+    </span>
   );
 }
 

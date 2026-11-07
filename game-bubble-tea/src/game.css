@@ -1,4 +1,21 @@
-/* 버블티 흔들기 전용 스타일. 색은 엔진의 --mg-* 변수를 쓰고, 컵 그림 색은 Cup.tsx의 그라데이션에 있다 */
+/* 버블티 흔들기 전용 스타일. 화면 색은 엔진의 --mg-* 변수, 컵 그림 색은 Cup.tsx의 그라데이션에 있다 */
+
+:root {
+  /* 1초 구간 평가 색: 적정(초록)·셈(노랑). 약함은 --mg-border, 넘침은 --mg-danger */
+  --bt-good: #2e9d5b;
+  --bt-strong: #e0a21b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bt-good: #4cc982;
+    --bt-strong: #f2bd45;
+  }
+}
+
+/* 흔드는 동안 당겨서 새로고침·스크롤로 화면이 움직이지 않게 한다 */
+body {
+  overscroll-behavior: none;
+}
 
 .bt-field {
   position: relative;
@@ -20,12 +37,19 @@
   user-select: none;
   -webkit-user-select: none;
 }
-/* 문질러 흔들 때 스크롤·확대로 입력이 새지 않게 한다 */
-.bt-field-pointer {
+/* 가로 화면(폰을 흔들다 돌아간 경우)에서는 높이를 화면에 맞춰 스크롤이 생기지 않게 한다 */
+@media (orientation: landscape) and (max-height: 500px) {
+  .bt-field {
+    height: calc(100vh - 80px);
+    min-height: 0;
+  }
+}
+/* 플레이 중: 문질러 흔들 때 스크롤·확대로 입력이 새지 않게 한다 */
+.bt-field-playing {
   touch-action: none;
   cursor: grab;
 }
-.bt-field-pointer:active {
+.bt-field-playing:active {
   cursor: grabbing;
 }
 .bt-overlay {
@@ -46,11 +70,26 @@
   font-weight: 700;
   text-align: center;
 }
-.bt-hint {
+.bt-notice {
   margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--mg-bg);
+  font-weight: 700;
+  text-align: center;
+}
+.bt-hint {
   color: var(--mg-muted);
   font-size: 14px;
   text-align: center;
+}
+/* 문지르기·키보드 모드 안내는 눈에 띄게: 폰을 흔들던 사람이 방식이 바뀐 것을 알아채야 한다 */
+.bt-hint-strong {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--mg-accent);
+  color: var(--mg-on-accent);
+  font-weight: 700;
 }
 
 .bt-cup-wrap {
@@ -68,17 +107,28 @@
   overflow: visible;
 }
 
-/* 섞임 게이지 */
+/* 컵 위 안내: 섞임·세기 게이지와 1초 점 10개 */
+.bt-hud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(300px, 86%);
+}
 .bt-meter {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: min(280px, 80%);
-  margin: 0;
+  width: 100%;
   font-size: 14px;
   font-weight: 700;
 }
-.bt-meter-track {
+.bt-meter-label {
+  width: 2.5em;
+}
+.bt-meter-track,
+.bt-intensity-track {
+  position: relative;
   flex: 1;
   height: 10px;
   border-radius: 5px;
@@ -92,10 +142,62 @@
   transform: scaleX(0);
   transform-origin: left;
 }
+/* 세기 게이지 띠: 약함(회색) → 적정(초록) → 경고(노랑) → 넘침(빨강). 경계는 Hud.tsx가 규칙 값으로 넘긴다 */
+.bt-intensity-track {
+  overflow: visible;
+  background: linear-gradient(
+    to right,
+    var(--mg-border) var(--bt-good-at),
+    var(--bt-good) var(--bt-good-at) var(--bt-warn-at),
+    var(--bt-strong) var(--bt-warn-at) var(--bt-spill-at),
+    var(--mg-danger) var(--bt-spill-at)
+  );
+}
+/* 바늘: 트랙 전체 폭을 기준으로 translateX(%)로 움직이도록 트랙과 같은 폭의 상자 안에 둔다 */
+.bt-intensity-marker {
+  position: absolute;
+  inset: -4px 0;
+  transform: translateX(0);
+}
+.bt-intensity-marker::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--mg-text);
+}
 .bt-meter-text {
   min-width: 3.5em;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+.bt-dots {
+  display: flex;
+  gap: 6px;
+}
+.bt-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--mg-border);
+}
+.bt-dot-steady {
+  border-color: var(--bt-good);
+  background: var(--bt-good);
+}
+.bt-dot-weak {
+  background: var(--mg-border);
+}
+.bt-dot-strong {
+  border-color: var(--bt-strong);
+  background: var(--bt-strong);
+}
+.bt-dot-spill {
+  border-color: var(--mg-danger);
+  background: var(--mg-danger);
 }
 
 /* 너무 세게 흔들 때 경고. 자리를 미리 잡아 두어 나타날 때 컵이 밀리지 않게 한다 */
@@ -113,10 +215,16 @@
   animation: bt-shake-text 160ms linear infinite;
 }
 
-/* 넘칠 때 컵 입구에서 튀는 방울 */
+/* 넘칠 때 컵 입구에서 튀는 방울과 잃은 점수 */
 .bt-droplet {
   fill: #c08d5c;
   animation: bt-droplet 500ms ease-out forwards;
+}
+.bt-penalty {
+  fill: var(--mg-danger);
+  font-size: 22px;
+  font-weight: 800;
+  animation: bt-float-up 900ms ease-out forwards;
 }
 
 /* 끝나는 연출: 빨대가 위에서 꽂히고 컵이 한 번 통 튄다 */
@@ -127,6 +235,64 @@
 }
 .bt-straw {
   animation: bt-straw-in 350ms ease-in;
+}
+
+/* 결과 화면: 1초 구간 그래프와 다음 판 팁 */
+.bt-graph {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  height: 96px;
+  padding-bottom: 18px;
+}
+/*
+ * 적정 범위 띠: 목표의 0.75~1.5배. 그래프 꼭대기가 목표의 2배이므로 아래에서 37.5%~75%.
+ * 막대 영역은 숫자 칸(18px)을 뺀 높이다
+ */
+.bt-graph-band {
+  position: absolute;
+  inset: auto 0 calc(18px + (100% - 18px) * 0.375);
+  height: calc((100% - 18px) * 0.375);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bt-good) 18%, transparent);
+}
+.bt-graph-column {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+.bt-graph-bar {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+}
+.bt-graph-second {
+  position: absolute;
+  bottom: -18px;
+  font-size: 11px;
+  color: var(--mg-muted);
+}
+.bt-advice {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 화면에는 안 보이고 스크린리더만 읽는다 */
+.bt-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 @keyframes bt-shake-text {
@@ -140,6 +306,12 @@
 @keyframes bt-droplet {
   to {
     transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+@keyframes bt-float-up {
+  to {
+    transform: translateY(-24px);
     opacity: 0;
   }
 }
@@ -160,5 +332,13 @@
   .bt-shaker-done,
   .bt-straw {
     animation: none;
+  }
+  .bt-penalty {
+    animation: bt-fade-out 900ms forwards;
+  }
+}
+@keyframes bt-fade-out {
+  to {
+    opacity: 0;
   }
 }
