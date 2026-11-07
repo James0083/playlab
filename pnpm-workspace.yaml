@@ -2,6 +2,8 @@ packages:
   - minigames-engine
   - minigames-home
   - game-*
+  # 새 게임용 템플릿. 빌드·검사에 포함해 엔진이 바뀌어도 템플릿이 낡지 않게 한다(배포·pnpm dev에서는 제외)
+  - templates/*
 # 게시 후 14일이 지나지 않은 버전은 설치하지 않는다(분 단위).
 minimumReleaseAge: 20160
 allowBuilds:
