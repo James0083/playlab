@@ -1,0 +1,164 @@
+/* 버블티 흔들기 전용 스타일. 색은 엔진의 --mg-* 변수를 쓰고, 컵 그림 색은 Cup.tsx의 그라데이션에 있다 */
+
+.bt-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 66vh;
+  min-height: 400px;
+  padding: 12px 0 0;
+  border: 1px solid var(--mg-border);
+  border-radius: 16px;
+  background: var(--mg-surface);
+  color: inherit;
+  font: inherit;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 문질러 흔들 때 스크롤·확대로 입력이 새지 않게 한다 */
+.bt-field-pointer {
+  touch-action: none;
+  cursor: grab;
+}
+.bt-field-pointer:active {
+  cursor: grabbing;
+}
+.bt-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  /* 컵이 비쳐 보이면서도 글자가 읽히도록 반투명 바탕을 깐다 */
+  background: color-mix(in srgb, var(--mg-surface) 72%, transparent);
+}
+.bt-guide {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+.bt-hint {
+  margin: 0;
+  color: var(--mg-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.bt-cup-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+}
+.bt-cup {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* 섞임 게이지 */
+.bt-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(280px, 80%);
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.bt-meter-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--mg-border);
+  overflow: hidden;
+}
+.bt-meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--mg-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.bt-meter-text {
+  min-width: 3.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 너무 세게 흔들 때 경고. 자리를 미리 잡아 두어 나타날 때 컵이 밀리지 않게 한다 */
+.bt-warning {
+  margin: 0 0 12px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--mg-danger);
+  color: #fff;
+  font-weight: 800;
+  visibility: hidden;
+}
+.bt-warning-visible {
+  visibility: visible;
+  animation: bt-shake-text 160ms linear infinite;
+}
+
+/* 넘칠 때 컵 입구에서 튀는 방울 */
+.bt-droplet {
+  fill: #c08d5c;
+  animation: bt-droplet 500ms ease-out forwards;
+}
+
+/* 끝나는 연출: 빨대가 위에서 꽂히고 컵이 한 번 통 튄다 */
+.bt-shaker-done {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: bt-hop 500ms ease-out 300ms;
+}
+.bt-straw {
+  animation: bt-straw-in 350ms ease-in;
+}
+
+@keyframes bt-shake-text {
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+@keyframes bt-droplet {
+  to {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+@keyframes bt-hop {
+  40% {
+    transform: translateY(-6%) scale(1.02, 0.98);
+  }
+}
+@keyframes bt-straw-in {
+  from {
+    transform: translateY(-120px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bt-warning-visible,
+  .bt-droplet,
+  .bt-shaker-done,
+  .bt-straw {
+    animation: none;
+  }
+}
