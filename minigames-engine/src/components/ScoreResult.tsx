@@ -95,7 +95,7 @@ export function ScoreResult({
           </button>
         )}
         {/* 0점은 자랑할 거리가 없어 공유 버튼을 숨긴다 */}
-        {score > 0 && <ShareButton title={title} score={score} />}
+        {score > 0 && <ShareButton title={title} score={score} headline={headline} />}
       </div>
 
       {/* 랭킹은 결과와 함께 바로 보인다 */}

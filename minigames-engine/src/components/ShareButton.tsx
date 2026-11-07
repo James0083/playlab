@@ -3,10 +3,12 @@ import { useState } from 'react';
 interface ShareButtonProps {
   title: string;
   score: number;
+  /** 결과 한 줄(예: "완벽한 버블티!"). 카드와 공유 문구에 함께 넣는다 */
+  headline?: string;
 }
 
 /** 공유 이미지를 Canvas로 직접 그린다. html2canvas(약 45KB gzip)를 쓰지 않아 번들이 가볍다. */
-function renderCard(title: string, score: number): Promise<Blob> {
+function renderCard({ title, score, headline }: ShareButtonProps): Promise<Blob> {
   const size = 1080;
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -26,6 +28,11 @@ function renderCard(title: string, score: number): Promise<Blob> {
   ctx.fillStyle = '#f5efe6';
   ctx.font = '500 56px system-ui, sans-serif';
   ctx.fillText('점', size / 2, 740);
+  if (headline) {
+    ctx.fillStyle = '#ffb454';
+    ctx.font = '700 64px system-ui, sans-serif';
+    ctx.fillText(headline, size / 2, 880);
+  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -35,19 +42,19 @@ function renderCard(title: string, score: number): Promise<Blob> {
   });
 }
 
-export function ShareButton({ title, score }: ShareButtonProps) {
+export function ShareButton({ title, score, headline }: ShareButtonProps) {
   const [failed, setFailed] = useState(false);
 
   const share = async () => {
     setFailed(false);
     try {
-      const blob = await renderCard(title, score);
+      const blob = await renderCard({ title, score, headline });
       const file = new File([blob], `${title}-${score}.png`, { type: 'image/png' });
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
           title,
-          text: `${title} ${score}점!`,
+          text: headline ? `${title} ${score}점! ${headline}` : `${title} ${score}점!`,
           url: location.href,
         });
         return;

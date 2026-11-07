@@ -13,7 +13,8 @@ export function getAudioContext(): AudioContext | null {
  */
 export function unlockAudio(): void {
   const audio = getAudioContext();
-  if (audio?.state === 'suspended') {
+  // iOS는 전화·백그라운드 뒤 'interrupted' 상태가 되기도 한다. 재생 중이 아니면 모두 다시 켠다
+  if (audio && audio.state !== 'running') {
     audio.resume().catch((error: unknown) => console.warn('[engine] 오디오 잠금 해제 실패', error));
   }
 }

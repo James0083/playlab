@@ -20,6 +20,16 @@ interface GameShellProps {
 
 const DEFAULT_URGENT_MS = 10_000;
 
+/**
+ * 글자를 입력하는 중의 ESC인지. 닉네임을 쓰다(한글 조합 취소 포함) ESC를 누르면
+ * 결과 화면을 떠나 기록을 등록하지 못했다.
+ */
+function isTyping(event: KeyboardEvent): boolean {
+  if (event.isComposing || event.defaultPrevented) return true;
+  const target = event.target;
+  return target instanceof Element && target.closest('input, textarea, [contenteditable]') !== null;
+}
+
 export function GameShell({
   title,
   score,
@@ -35,7 +45,8 @@ export function GameShell({
   useEffect(() => {
     if (!hasBack) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') handleBack();
+      if (event.key !== 'Escape' || isTyping(event)) return;
+      handleBack();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
