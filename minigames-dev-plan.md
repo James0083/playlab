@@ -1,7 +1,7 @@
 # 미니게임 개발 계획
 
 > 웹앱 + 토스 미니앱(앱인토스) 타겟 / 모노레포 + 게임별 독립 배포 + 공통 엔진 패키지
-> 최종 수정: 2026-11-06 (검토 결과 반영, 뼈대 구현 완료)
+> 최종 수정: 2026-11-07 (전체 코드 정리, 새 게임 템플릿 `templates/game` + `pnpm new-game`)
 
 ---
 
@@ -123,10 +123,22 @@ run_worker_first = ["/games/*"]
 
 ### 새 게임 추가 체크리스트
 
-1. `game-tteokchigi`를 복사해 `game-<slug>`로 만들고 `vite.config.ts`의 `base`를 바꾼다
-2. Cloudflare Pages 프로젝트를 만들어 레포에 연결([Pages 설정](#cloudflare-pages-설정-게임마다)) → 실제 `*.pages.dev` 주소 확인
-3. Supabase `games` 테이블에 행을 추가한다. 없으면 점수 저장이 `unknown game`으로 거부된다
-4. `minigames-home/lib/games.ts`에 항목 추가(`origin`에 2의 주소) → `status: 'live'` → `pnpm deploy`
+새 게임은 기존 게임이 아니라 **템플릿(`templates/game`)**에서 만든다(2026-11-07 결정). 기존 게임을 복사하면 그 게임의 그림·음악·규칙을 지우는 일이 더 많았다.
+
+1. 폴더 만들기: `pnpm new-game --slug <slug> --name <PascalName> --prefix <2글자> --title "<화면 제목>"`
+   - 예: `pnpm new-game --slug bubble-tea --name BubbleTea --prefix bt --title "버블티 흔들기"`
+   - 템플릿을 `game-<slug>`로 복사하고 패키지 이름, `vite.config.ts`의 `base`, `SLUG`·`TITLE`, 컴포넌트 이름(`<Name>Game`), CSS 접두사를 바꾼다. 다른 게임이 쓰는 접두사면 멈춘다
+2. `pnpm install`로 새 패키지를 워크스페이스에 연결한다
+3. `minigames-home/lib/games.ts`에 항목을 추가한다(`status: 'coming-soon'`). `pnpm dev` 홈에 바로 보인다
+4. `src/rules.ts` → `src/<Name>Game.tsx` 순서로 `TODO:` 주석의 예시(10초 탭 세기)를 이 게임 내용으로 바꾼다. 소리가 없으면 `sounds.ts`를 지운다
+5. [각 게임 완성 기준](#각-게임-완성-기준)을 채운다. `rules.ts`의 `MAX_SCORE`를 [Phase 1 태스크](#태스크)의 `max_score`에 적는다
+6. Cloudflare Pages 프로젝트를 만들어 레포에 연결([Pages 설정](#cloudflare-pages-설정-게임마다)) → 실제 `*.pages.dev` 주소 확인
+7. Supabase `games` 테이블에 행을 추가한다. 없으면 점수 저장이 `unknown game`으로 거부된다
+8. `games.ts`의 `origin`에 6의 주소 → `status: 'live'` → `pnpm deploy`
+
+**템플릿에 들어 있는 것**: 시작 화면(안내 + 시작 버튼, iOS 오디오 잠금 해제) → 3·2·1 카운트다운 → 플레이(화면 탭·스페이스·엔터, 게임 시계, 진동, 합성 효과음) → 결과 화면(headline, 게임별 기록 `mg-stats`, 랭킹). 뒤로 가기/ESC, 연타 방지 규칙과 경계값 테스트, 다크모드 색 변수.
+
+**템플릿을 고칠 때**: 템플릿도 워크스페이스 패키지(`game-template`)라 `pnpm check`가 타입·lint·테스트를 검사한다. 엔진 공개 API를 바꾸면 게임들과 함께 템플릿도 고친다. 자리표시자 낱말(`template`, `Template`, `tp-`, `게임 이름`)은 `pnpm new-game`이 치환하므로 다른 뜻으로 쓰지 않는다. `pnpm dev`와 배포에는 포함되지 않는다.
 
 ---
 
@@ -139,7 +151,9 @@ playlab/                   ← pnpm workspace
 ├── minigames-engine/      ← @minigames/engine (npm에 배포하지 않음, workspace:*로 참조)
 ├── minigames-home/        ← 홈 + 라우터 Worker
 ├── game-tteokchigi/
-└── game-…/
+├── game-…/
+├── templates/game/        ← 새 게임 템플릿 (pnpm new-game이 복사)
+└── scripts/               ← dev.mjs(통합 개발 서버), new-game.mjs
 ```
 
 - **배포는 여전히 게임별로 독립적이다.** 게임마다 Cloudflare Pages 프로젝트를 따로 만들어 같은 레포에 연결한다
@@ -192,6 +206,8 @@ minigames-engine/
 ├── tsup.config.ts                # JS 빌드
 └── tsconfig.build.json           # 타입 선언 빌드
 ```
+
+**공개 API**(`src/index.ts`)는 게임이 실제로 쓰는 것만 둔다. 랭킹 조회·점수 제출·공유·오류 화면(`useLeaderboard`, `Leaderboard`, `submitScore`, `fetchTop10`, `ShareButton`, `ErrorBoundary` 등)은 `ScoreResult`·`GameShell` 안에서만 쓰는 내부 구현이라 2026-11-07에 공개 API에서 뺐다. `useDeviceMotion`은 버블티부터 쓴다.
 
 **원래 계획에서 바뀐 점**
 - `next` peer dependency 제거. React 18/19만 peer로 둔다
@@ -290,18 +306,25 @@ minigames-home/
 
 ### 각 게임 공통 구조
 
+`pnpm new-game`이 만드는 구조([템플릿](templates/game)). 게임이 커지면 화면 조각(`Scene.tsx`, `Board.tsx` 등)과 규칙 모듈(`scoring.ts`, `trace.ts` 등)을 옆에 더한다.
+
 ```
 game-<slug>/
-├── index.html
+├── index.html            # <title>
 ├── vite.config.ts        # base: '/games/<slug>/'
-├── src/
-│   ├── main.tsx          # Supabase 설정 + 렌더링
-│   ├── <Slug>Game.tsx    # 게임 화면 (예: TteokchigiGame.tsx)
-│   ├── rules.ts          # 판정·점수 규칙 (순수 함수, 테스트 대상)
-│   └── rules.test.ts
-├── public/sounds/
-└── .env.example          # VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
+├── package.json          # name: game-<slug>
+├── .env.example          # VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
+└── src/
+    ├── main.tsx          # Supabase 설정 + 렌더링
+    ├── <Name>Game.tsx    # 게임 화면과 입력 처리 (예: TteokchigiGame.tsx)
+    ├── rules.ts          # 판정·점수 규칙, MAX_SCORE (순수 함수, 서버 재판정에서도 사용)
+    ├── rules.test.ts     # 경계값·꼼수 방지 테스트
+    ├── sounds.ts         # 합성 효과음 (소리가 없으면 삭제)
+    ├── game.css          # 게임 전용 스타일 (2글자 접두사)
+    └── vite-env.d.ts
 ```
+
+음원 파일을 쓰게 되면 `public/sounds/`에 두고 `import.meta.env.BASE_URL` 기준으로 참조한다. 지금은 모든 소리를 합성해 `public/`이 없다.
 
 ### 3-1. 떡치기 🔨 ✅ 플레이 가능한 뼈대
 
@@ -409,6 +432,7 @@ BPM: 시작 60(임시), 10초마다 +10 (마지막 구간 110), 총 84박
 ```
 
 **구현 순서**
+0. `pnpm new-game --slug bubble-tea --name BubbleTea --prefix bt --title "버블티 흔들기"` (홈 `games.ts`에는 이미 항목이 있다)
 1. `useDeviceMotion`으로 `accelerationIncludingGravity` 샘플링. iOS는 시작 버튼 탭 안에서 권한 요청
 2. 버블티 잔 애니메이션
 3. 넘침 경고 + 패널티 계산
@@ -528,5 +552,5 @@ Phase 0 (엔진) ✅ 사운드·시계·에러 화면까지
 
 > Phase 번호를 실제 진행 순서에 맞게 바꿨다. 원래의 Phase 6(토스)이 Phase 5가 되고, 원래의 Phase 5(오징어게임 3종)가 Phase 6(전통 놀이 3종)이 됐다.
 
-스펙이 가장 완성된 **떡치기**를 엔진의 첫 실전 테스트 케이스로 쓴다.
-떡치기 완성 → 엔진 API 확정 → 나머지 게임은 `game-tteokchigi`를 복사하고 게임 로직만 교체하는 패턴으로 만든다.
+스펙이 가장 완성된 **떡치기**를 엔진의 첫 실전 테스트 케이스로 썼다.
+떡치기·달고나로 엔진 API를 다듬었고, 나머지 게임은 **템플릿에서 `pnpm new-game`으로 만들고 게임 로직만 채우는** 패턴으로 만든다([새 게임 추가 체크리스트](#새-게임-추가-체크리스트)).

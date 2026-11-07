@@ -29,13 +29,14 @@ pnpm lint:fix   # 자동 수정 가능한 lint 오류 수정
 | 테스트 | 대상 파일 옆에 `*.test.ts` | `rules.test.ts` |
 | 타입만 있는 파일 | `*.types.ts` | `database.types.ts` |
 
-게임 폴더(`game-<slug>/src`)는 아래 구조를 지킨다. 새 게임은 `game-tteokchigi`를 복사해서 시작한다.
+게임 폴더(`game-<slug>/src`)는 아래 구조를 지킨다. 새 게임은 `pnpm new-game`으로 템플릿(`templates/game`)을 복사해서 시작한다. 기존 게임을 복사하지 않는다.
 
 ```
 main.tsx          진입점. 설정과 렌더링만
-<Slug>Game.tsx    화면과 입력 처리
+<Name>Game.tsx    화면과 입력 처리
 rules.ts          판정·점수·난이도 규칙 (순수 함수)
 rules.test.ts
+sounds.ts         합성 효과음 (소리가 없으면 두지 않는다)
 game.css          이 게임 전용 스타일
 ```
 

@@ -8,6 +8,7 @@ james-playlab.com 미니게임 모노레포. 계획과 결정 사항은 [minigam
 | `minigames-home/` | 홈(정적) + 라우터 Worker. 게임 목록 단일 소스는 `lib/games.ts` | wrangler |
 | `game-tteokchigi/` | 떡치기 (Vite + React). 판정 규칙은 `src/rules.ts` | Cloudflare Pages |
 | `game-dalgona/` | 달고나 뽑기. 모양은 `src/shapes.ts`, 긁기 판정은 `src/trace.ts` | Cloudflare Pages |
+| `templates/game/` | 새 게임 템플릿(10초 탭 세기 예시). `pnpm new-game`이 복사한다 | 배포 안 함 |
 
 요구 사항: Node 24, pnpm 12.15.0 (`packageManager` 필드에 고정)
 
@@ -36,10 +37,9 @@ Supabase 없이도 동작합니다(로컬 최고기록만 사용). 연결하려�
 
 ## 새 게임 추가
 
-1. `game-tteokchigi`를 복사해 `game-<slug>`로 만들고 `package.json`의 `name`과 `vite.config.ts`의 `base`(`/games/<slug>/`)를 바꾼다
-2. Cloudflare Pages 프로젝트 생성
-   - 빌드 명령: `pnpm --filter game-<slug>... build`
-   - 출력 디렉터리: `game-<slug>/dist`
-   - 감시 경로: `game-<slug>/*`, `minigames-engine/*`, `pnpm-lock.yaml`
-3. Supabase `games` 테이블에 행 추가 (없으면 점수 저장이 `unknown game`으로 거부된다)
-4. `minigames-home/lib/games.ts`에 항목 추가(`origin`에 실제 `*.pages.dev` 주소) → `status: 'live'` → `pnpm --filter minigames-home deploy`
+```sh
+pnpm new-game --slug bubble-tea --name BubbleTea --prefix bt --title "버블티 흔들기"
+pnpm install
+```
+
+템플릿(`templates/game`)을 `game-<slug>`로 복사하고 이름·경로·CSS 접두사를 바꿉니다. 이후 단계(홈 목록 추가, Pages 프로젝트, Supabase `games` 행, 배포)는 [minigames-dev-plan.md의 새 게임 추가 체크리스트](minigames-dev-plan.md#새-게임-추가-체크리스트)를 따릅니다.
