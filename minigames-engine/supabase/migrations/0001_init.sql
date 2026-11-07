@@ -12,6 +12,7 @@ create table public.games (
 create table public.scores (
   id          uuid primary key default gen_random_uuid(),
   game_slug   text not null references public.games (slug),
+  board       text not null default '' check (char_length(board) <= 32), -- 게임 안의 기록 단위(예: 달고나 모양). 랭킹을 따로 둔다
   player_id   uuid not null,  -- 익명 UUID (localStorage)
   nickname    text not null check (char_length(nickname) between 1 and 12),
   score       int not null check (score >= 0),
@@ -19,13 +20,15 @@ create table public.scores (
   created_at  timestamptz not null default now()
 );
 
-create index scores_rank_idx   on public.scores (game_slug, score desc);
+create index scores_rank_idx   on public.scores (game_slug, board, score desc);
 create index scores_recent_idx on public.scores (game_slug, created_at desc);
 create index scores_player_idx on public.scores (player_id, game_slug, created_at desc);
 
 -- RLS: 게임 목록은 읽기만 허용하고, scores는 직접 접근을 막아 아래 함수로만 다룬다.
 -- 주의: 클라이언트가 계산한 점수를 받는 구조라 위조를 완전히 막을 수는 없다.
 -- 여기서는 범위 검증과 빈도 제한으로 명백한 조작만 걸러낸다.
+-- TODO(Supabase 연결 시): 점수 대신 입력 기록(떡치기 탭 시각, 달고나 경로)을 받아
+-- Edge Function에서 같은 규칙으로 다시 판정한다. 설계는 minigames-dev-plan.md Phase 1 참고.
 alter table public.games enable row level security;
 alter table public.scores enable row level security;
 
@@ -33,6 +36,7 @@ create policy games_read on public.games for select to anon, authenticated using
 
 create function public.submit_score(
   p_game_slug text,
+  p_board     text,
   p_player_id uuid,
   p_nickname  text,
   p_score     int,
@@ -66,13 +70,13 @@ begin
     raise exception 'too many submissions' using errcode = 'P0001';
   end if;
 
-  insert into public.scores (game_slug, player_id, nickname, score, metadata)
-  values (p_game_slug, p_player_id, btrim(p_nickname), p_score, coalesce(p_metadata, '{}'));
+  insert into public.scores (game_slug, board, player_id, nickname, score, metadata)
+  values (p_game_slug, coalesce(p_board, ''), p_player_id, btrim(p_nickname), p_score, coalesce(p_metadata, '{}'));
 end;
 $$;
 
--- 플레이어별 최고 기록 기준 Top 10. 한 사람이 순위를 독점하지 않는다.
-create function public.get_top10(p_game_slug text)
+-- 게임·보드별, 플레이어별 최고 기록 기준 Top 10. 한 사람이 순위를 독점하지 않는다.
+create function public.get_top10(p_game_slug text, p_board text default '')
 returns table (rank bigint, nickname text, score int)
 language sql
 stable
@@ -83,22 +87,22 @@ as $$
   from (
     select distinct on (s.player_id) s.player_id, s.nickname, s.score, s.created_at
     from public.scores s
-    where s.game_slug = p_game_slug
+    where s.game_slug = p_game_slug and s.board = coalesce(p_board, '')
     order by s.player_id, s.score desc, s.created_at asc
   ) b
   order by 1
   limit 10;
 $$;
 
-revoke all on function public.submit_score(text, uuid, text, int, jsonb) from public;
-revoke all on function public.get_top10(text) from public;
-grant execute on function public.submit_score(text, uuid, text, int, jsonb) to anon, authenticated;
-grant execute on function public.get_top10(text) to anon, authenticated;
+revoke all on function public.submit_score(text, text, uuid, text, int, jsonb) from public;
+revoke all on function public.get_top10(text, text) from public;
+grant execute on function public.submit_score(text, text, uuid, text, int, jsonb) to anon, authenticated;
+grant execute on function public.get_top10(text, text) to anon, authenticated;
 
--- max_score: 떡치기는 game-tteokchigi/src/rules.ts의 MAX_SCORE(72박자 × PERFECT 2점)와 같아야 한다.
+-- max_score: 떡치기는 game-tteokchigi/src/scoring.ts의 MAX_SCORE(84박자 모두 GREAT + 콤보 배율)와 같아야 한다.
 -- 달고나는 game-dalgona/src/rules.ts의 MAX_SCORE(우산 기준 점수 800)와 같아야 한다.
 -- 나머지 게임은 규칙이 정해지면 채운다(null이면 상한 검사를 하지 않는다).
 insert into public.games (slug, name, description, max_score) values
-  ('tteokchigi', '떡치기', '떡메가 떡에 닿는 순간 탭', 144),
+  ('tteokchigi', '떡치기', '떡메가 떡에 닿는 순간 탭', 642),
   ('dalgona', '달고나 뽑기', '선을 벗어나지 않게 드래그', 800),
   ('bubble-tea', '버블티 흔들기', '넘치지 않게 폰 흔들기', null);

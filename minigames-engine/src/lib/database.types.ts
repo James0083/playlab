@@ -11,6 +11,7 @@ export interface Database {
       submit_score: {
         Args: {
           p_game_slug: string;
+          p_board: string;
           p_player_id: string;
           p_nickname: string;
           p_score: number;
@@ -19,7 +20,7 @@ export interface Database {
         Returns: undefined;
       };
       get_top10: {
-        Args: { p_game_slug: string };
+        Args: { p_game_slug: string; p_board: string };
         Returns: { rank: number; nickname: string; score: number }[];
       };
     };

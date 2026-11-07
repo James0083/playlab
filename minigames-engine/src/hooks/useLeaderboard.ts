@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchTop10, type LeaderboardEntry } from '../lib/score.ts';
+import { fetchTop10, type LeaderboardEntry, type RecordBoard } from '../lib/score.ts';
 import { isSupabaseConfigured } from '../lib/supabase.ts';
 
 export type LeaderboardStatus = 'offline' | 'loading' | 'ready' | 'error';
@@ -8,7 +8,7 @@ export type LeaderboardStatus = 'offline' | 'loading' | 'ready' | 'error';
  * Top 10 조회. Realtime 구독 대신 결과 화면에서 한 번 조회하고 refresh()로 갱신한다.
  * Supabase Free의 동시 Realtime 연결 한도(200)를 플레이어가 소모하지 않게 하기 위함이다.
  */
-export function useLeaderboard(slug: string) {
+export function useLeaderboard({ slug, board = '' }: RecordBoard) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [status, setStatus] = useState<LeaderboardStatus>(
     isSupabaseConfigured() ? 'loading' : 'offline',
@@ -20,7 +20,7 @@ export function useLeaderboard(slug: string) {
     if (!isSupabaseConfigured()) return;
     // 응답이 오기 전에 화면을 떠나거나 slug가 바뀌면 결과를 버린다.
     let stale = false;
-    fetchTop10(slug).then(
+    fetchTop10({ slug, board }).then(
       (next) => {
         if (stale) return;
         setEntries(next);
@@ -35,7 +35,7 @@ export function useLeaderboard(slug: string) {
     return () => {
       stale = true;
     };
-  }, [slug, requestId]);
+  }, [slug, board, requestId]);
 
   const refresh = useCallback(() => {
     if (!isSupabaseConfigured()) return;

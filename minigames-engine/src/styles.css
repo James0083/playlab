@@ -6,6 +6,7 @@
   --mg-accent: #b4560b;
   --mg-on-accent: #ffffff;
   --mg-border: #e4dccf;
+  --mg-danger: #c62828;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -17,6 +18,7 @@
     --mg-accent: #ffb454;
     --mg-on-accent: #2a1a05;
     --mg-border: #453d32;
+    --mg-danger: #ff6b6b;
   }
 }
 * {
@@ -166,4 +168,56 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
+}
+
+/* 남은 시간 10초 이하 */
+.mg-time-urgent {
+  color: var(--mg-danger);
+  font-weight: 800;
+  animation: mg-pulse 1s ease-in-out infinite;
+}
+@keyframes mg-pulse {
+  50% {
+    transform: scale(1.25);
+  }
+}
+.mg-time {
+  display: inline-block;
+}
+.mg-section-title {
+  align-self: flex-start;
+  margin: 12px 0 0;
+  font-size: 16px;
+}
+/* 게임별 결과 기록(판정별 개수 등) */
+.mg-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mg-stats li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border: 1px solid var(--mg-border);
+  border-radius: 12px;
+  background: var(--mg-surface);
+}
+.mg-stats strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.mg-stats span {
+  font-size: 12px;
+  color: var(--mg-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mg-time-urgent {
+    animation: none;
+  }
 }

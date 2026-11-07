@@ -2,6 +2,9 @@
 export interface AudioTimeSource {
   readonly currentTime: number;
   readonly state: AudioContextState;
+  /** 소리가 실제로 스피커에서 나기까지 걸리는 시간(초). 블루투스 이어폰이면 0.1~0.3초 */
+  readonly baseLatency?: number;
+  readonly outputLatency?: number;
 }
 
 export interface GameClock {
@@ -29,8 +32,10 @@ export function createGameClock(
 ): GameClock {
   if (audio?.state === 'running') {
     const startS = audio.currentTime;
+    // 예약한 소리는 출력 지연만큼 늦게 들린다. 경과 시간을 그만큼 늦춰 화면·판정을 들리는 소리에 맞춘다.
+    const latencyS = (audio.baseLatency ?? 0) + (audio.outputLatency ?? 0);
     return {
-      elapsedMs: () => (audio.currentTime - startS) * MS_PER_SECOND,
+      elapsedMs: () => (audio.currentTime - startS - latencyS) * MS_PER_SECOND,
       toAudioTime: (elapsedMs) => startS + elapsedMs / MS_PER_SECOND,
     };
   }

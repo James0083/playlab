@@ -42,3 +42,11 @@ test('start는 이전 판의 점수를 지운다', () => {
   assert.equal(restarted.score, 0);
   assert.equal(restarted.remainingMs, 10_000);
 });
+
+test('감점이 있어도 점수는 0 아래로 내려가지 않는다', () => {
+  const state = reduce(reduce(playing(), { type: 'addScore', delta: 2 }), {
+    type: 'addScore',
+    delta: -5,
+  });
+  assert.equal(state.score, 0);
+});

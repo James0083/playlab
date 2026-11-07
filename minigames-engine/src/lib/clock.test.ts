@@ -27,3 +27,18 @@ test('오디오를 쓸 수 없는 환경에서도 시계가 흐른다', () => {
   nowMs = 100;
   assert.equal(clock.elapsedMs(), 100);
 });
+
+test('출력 지연이 있으면 화면·판정 시계를 그만큼 늦춰 들리는 소리에 맞춘다', () => {
+  const audio = {
+    currentTime: 10,
+    state: 'running' as const,
+    baseLatency: 0.01,
+    outputLatency: 0.19,
+  };
+  const clock = createGameClock(audio);
+  audio.currentTime = 11.2;
+  // 1.2초 지났지만 소리는 0.2초 늦게 들리므로 들리는 기준으로는 1.0초
+  assert.ok(Math.abs(clock.elapsedMs() - 1_000) < 1e-6);
+  // 예약 시각은 그대로(소리는 지연을 거쳐 들리면서 화면과 맞는다)
+  assert.equal(clock.toAudioTime(2_000), 12);
+});

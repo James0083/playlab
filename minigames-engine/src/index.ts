@@ -35,5 +35,5 @@ export {
   saveLocalBest,
   submitScore,
 } from './lib/score.ts';
-export type { ScoreSubmission } from './lib/score.ts';
+export type { RecordBoard, ScoreSubmission } from './lib/score.ts';
 export type { LeaderboardEntry } from './lib/score.ts';

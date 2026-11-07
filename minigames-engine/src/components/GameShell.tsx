@@ -13,6 +13,9 @@ interface GameShellProps {
   children: ReactNode;
 }
 
+/** 남은 시간이 이 이하이면 빨갛게 맥동시켜 긴장감을 준다 */
+const URGENT_MS = 10_000;
+
 export function GameShell({ title, score, remainingMs, onBack, children }: GameShellProps) {
   const hasBack = onBack !== undefined;
   // 최신 onBack을 부르되, onBack이 바뀔 때마다 키 이벤트를 다시 구독하지 않는다
@@ -37,7 +40,11 @@ export function GameShell({ title, score, remainingMs, onBack, children }: GameS
         )}
         <h1 className="mg-title">{title}</h1>
         <div className="mg-hud">
-          {remainingMs != null && <span>{Math.ceil(remainingMs / 1000)}초</span>}
+          {remainingMs != null && (
+            <span className={remainingMs <= URGENT_MS ? 'mg-time mg-time-urgent' : 'mg-time'}>
+              {Math.ceil(remainingMs / 1000)}초
+            </span>
+          )}
           {score != null && <strong>{score}점</strong>}
         </div>
       </header>

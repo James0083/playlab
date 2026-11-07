@@ -45,7 +45,8 @@ export function gameSessionReducer(
     case 'addScore':
       // 플레이 중이 아닐 때 들어온 입력(카운트다운 중 탭 등)은 무시한다.
       if (state.phase !== 'playing') return state;
-      return { ...state, score: state.score + action.delta };
+      // 감점이 있어도 점수는 0 아래로 내려가지 않는다
+      return { ...state, score: Math.max(state.score + action.delta, 0) };
 
     case 'end':
       if (state.phase !== 'playing') return state;
