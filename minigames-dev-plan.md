@@ -20,6 +20,7 @@
 | 떡치기 시작 BPM | 임시 60. 플레이테스트 후 확정 |
 | 떡치기 음성 | **쓰지 않음.** "よーい"는 말풍선으로 보여주고, 음성은 추후 추가 사항으로 남긴다 |
 | 홈 디자인 | 디자인 파일 `playlab-home.html`(이전 이름 `minigames-home.html`)이 아직 없다. 디자인 결정 사항은 [Phase 2](#phase-2--메인-홈-minigames-home--뼈대-완료-임시-화면) 참고 |
+| 임시 배포 | **GitHub Pages로 결정(2026-11-08).** Cloudflare 배포 전까지 `https://james0083.github.io/playlab/`에 홈과 모든 게임을 올린다. 아래 [GitHub Pages 임시 배포](#github-pages-임시-배포-cloudflare-전까지) 참고 |
 | 로컬 개발 서버 구조 | **미결정, 당분간 지금 구조(게임마다 서버 + 프록시) 유지.** 선택지와 전환 시점은 [로컬 개발 서버](#로컬-개발-서버-pnpm-dev--구조-선택지-미결정) 참고 |
 
 ---
@@ -119,8 +120,31 @@ run_worker_first = ["/games/*"]
 
 ### 게임 빌드 규칙
 
-- 각 게임의 `vite.config.ts`에 `base: '/games/<slug>/'`를 둔다. Worker가 접두사를 제거해 프록시하므로, 산출물 안의 자산 경로에는 접두사가 있어야 한다
+- 각 게임의 `vite.config.ts`에 `base: '${PLAYLAB_BASE_PATH}games/<slug>/'`를 둔다(기본 `/`). Worker가 접두사를 제거해 프록시하므로, 산출물 안의 자산 경로에는 접두사가 있어야 한다
 - 효과음 등 `public/` 파일은 `import.meta.env.BASE_URL` 기준으로 참조한다
+- 경로를 코드에 고정하지 않는다. 홈으로 가기(`goHome`)는 지금 주소의 `/games/` 앞까지를 홈으로 본다. 그래야 `/`(Cloudflare)와 `/playlab/`(GitHub Pages) 어느 쪽에서도 동작한다
+
+### GitHub Pages 임시 배포 (Cloudflare 전까지)
+
+**주소:** `https://james0083.github.io/playlab/` (게임은 `.../playlab/games/<slug>/`)
+
+`main`에 push하면 [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)이 `pnpm check` → `pnpm build:pages` → 배포한다. 수동 실행(workflow_dispatch)도 된다.
+
+- [scripts/build-pages.mjs](scripts/build-pages.mjs)가 엔진 → 홈 → 게임을 빌드해 `pages-dist/`에 배포 경로 그대로 모은다(홈 = 루트, 게임 = `games/<slug>/`, `.nojekyll`)
+- Worker 프록시 없이 정적 파일로만 서빙하므로 경로 앞부분(`PLAYLAB_BASE_PATH`, 기본 `/playlab/`)을 빌드할 때 넣는다. Actions에서는 `configure-pages`가 알려 주는 값을 쓴다(사용자 도메인을 붙이면 `/`)
+- 레포에 있는 게임은 `status`와 관계없이 모두 링크한다(`PLAYLAB_LINK_LOCAL_GAMES=1`, `pnpm dev`와 같음)
+- 홈은 `minigames-home/dist`가 아니라 `pages-dist/`에 바로 빌드한다(`PLAYLAB_HOME_OUT_DIR`). `minigames-home/dist`는 실행 중인 `pnpm dev`가 서빙하므로 `/playlab/`용 빌드로 덮으면 개발 서버 홈 링크가 깨진다
+- 없는 경로는 사이트 루트의 `404.html`이 "홈으로"(`/playlab/`) 링크와 함께 응답한다
+- Supabase는 연결하지 않으므로 오프라인 모드(이 기기 최고기록만). 같은 `james0083.github.io` 주소의 다른 저장소 페이지와 localStorage를 함께 쓰지만 키가 `minigames:`로 시작해 겹치지 않는다
+- 액션 버전은 의존성 규칙(14일·새 메이저 60일)대로 정확한 태그로 고정했다: checkout v7.0.1, setup-node v7.1.0, pnpm/action-setup v6.1.0(v6.1.1은 5일째라 제외), configure-pages v6.0.0, upload-pages-artifact v5.0.0, deploy-pages v5.0.1
+
+**처음 한 번 할 일:** 저장소 Settings → Pages → Build and deployment → Source를 **GitHub Actions**로 바꾼다(저장소는 공개라 무료로 쓸 수 있다).
+
+**Cloudflare로 옮길 때:** 워크플로를 지우거나 `workflow_dispatch`만 남긴다. 게임 코드는 바꿀 것이 없다(기본 경로가 `/`).
+
+- [x] 로컬에서 `/playlab/` 아래에 올려 홈 → 게임 → 뒤로 가기(홈) 확인 (2026-11-08)
+- [ ] Settings에서 Pages 소스를 GitHub Actions로 바꾸고 첫 배포 확인
+- [ ] 폰으로 접속해 버블티 동작 센서 확인(HTTPS라 센서를 쓸 수 있다). 버블티 실기기 플레이테스트에 활용
 
 ### 새 게임 추가 체크리스트
 
@@ -133,6 +157,7 @@ run_worker_first = ["/games/*"]
 3. `minigames-home/lib/games.ts`에 항목을 추가한다(`status: 'coming-soon'`). `pnpm dev` 홈에 바로 보인다
 4. `src/rules.ts` → `src/<Name>Game.tsx` 순서로 `TODO:` 주석의 예시(10초 탭 세기)를 이 게임 내용으로 바꾼다. 소리가 없으면 `sounds.ts`를 지운다
 5. [각 게임 완성 기준](#각-게임-완성-기준)을 채운다. `rules.ts`의 `MAX_SCORE`를 [Phase 1 태스크](#태스크)의 `max_score`에 적는다
+   - GitHub Pages 임시 배포에는 따로 할 일이 없다. 레포에 있는 게임은 `main`에 push하면 함께 올라간다
 6. Cloudflare Pages 프로젝트를 만들어 레포에 연결([Pages 설정](#cloudflare-pages-설정-게임마다)) → 실제 `*.pages.dev` 주소 확인
 7. Supabase `games` 테이블에 행을 추가한다. 없으면 점수 저장이 `unknown game`으로 거부된다
 8. `games.ts`의 `origin`에 6의 주소 → `status: 'live'` → `pnpm deploy`
@@ -609,7 +634,7 @@ Phase 0 (엔진) ✅ 사운드·시계·에러 화면까지
   → 최후순위: Supabase 적용(Phase 1) · 도메인 구매·연결·배포(Phase 2)
 ```
 
-> Supabase와 도메인은 가장 뒤로 미뤘다(2026-11-06 결정). 그 전까지 게임은 오프라인 모드로 동작하고, 미리보기 배포가 필요하면 `*.pages.dev` 주소를 쓴다.
+> Supabase와 도메인은 가장 뒤로 미뤘다(2026-11-06 결정). 그 전까지 게임은 오프라인 모드로 동작하고, 임시 배포는 GitHub Pages(`https://james0083.github.io/playlab/`)를 쓴다(2026-11-08).
 
 > Phase 번호를 실제 진행 순서에 맞게 바꿨다. 원래의 Phase 6(토스)이 Phase 5가 되고, 원래의 Phase 5(오징어게임 3종)가 Phase 6(전통 놀이 3종)이 됐다.
 

@@ -19,6 +19,7 @@ pnpm dev          # http://localhost:5173 — 홈(/)과 모든 게임(/games/<sl
 pnpm test         # 엔진·홈·Worker·게임 규칙 테스트
 pnpm typecheck
 pnpm build        # 엔진 → 홈/게임 순서로 빌드
+pnpm build:pages  # GitHub Pages용 사이트를 pages-dist/에 만든다(경로 앞부분 /playlab/)
 pnpm check        # 커밋 전: 포맷 검사 → lint → 타입 검사 → 테스트
 ```
 
@@ -35,6 +36,10 @@ Supabase 없이도 동작합니다(로컬 최고기록만 사용). 연결하려�
 - 게시 후 14일 이상 지난 버전만 쓴다. `pnpm-workspace.yaml`의 `minimumReleaseAge`로 강제된다
 - 해당 버전의 주간 다운로드가 100만 이상이어야 한다
 - 새 메이저 버전은 출시 후 60일이 지나야 쓴다
+
+## 임시 배포 (GitHub Pages)
+
+Cloudflare 배포 전까지 https://james0083.github.io/playlab/ 에 홈과 모든 게임을 올립니다. `main`에 push하면 GitHub Actions가 검사 → 빌드 → 배포합니다. 처음 한 번은 저장소 Settings → Pages → Source를 **GitHub Actions**로 바꿔야 합니다. 자세한 내용은 [minigames-dev-plan.md](minigames-dev-plan.md#github-pages-임시-배포-cloudflare-전까지)에 있습니다.
 
 ## 새 게임 추가
 
