@@ -9,6 +9,7 @@
     "dev": "node scripts/dev.mjs",
     "new-game": "node scripts/new-game.mjs",
     "build": "pnpm --filter @minigames/engine build && pnpm --filter !@minigames/engine -r build",
+    "build:pages": "node scripts/build-pages.mjs",
     "test": "pnpm -r test",
     "typecheck": "pnpm --filter @minigames/engine build && pnpm -r typecheck",
     "lint": "eslint .",

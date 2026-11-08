@@ -1,0 +1,63 @@
+# GitHub Pages 임시 배포(Cloudflare 배포 전까지). main에 push하면 검사 → 빌드 → 배포한다.
+# 처음 한 번: 저장소 Settings → Pages → Build and deployment → Source를 "GitHub Actions"로 바꾼다.
+# 주소: https://james0083.github.io/playlab/
+#
+# 액션 버전은 의존성 규칙(CONVENTIONS.md §12)을 따라 정확한 태그로 고정한다:
+# 게시 후 14일 이상, 새 메이저는 60일 이상. 메이저 태그(@v7)는 새 릴리스를 바로 따라가므로 쓰지 않는다.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포가 겹치면 진행 중인 것은 끝까지 두고 기다리던 것만 최신으로 바꾼다
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      # package.json의 packageManager(pnpm@12.15.0)를 따른다
+      - uses: pnpm/action-setup@v6.1.0
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # 커밋 전 규칙과 같다. 검사가 실패하면 배포하지 않는다
+      - run: pnpm check
+
+      - id: pages
+        uses: actions/configure-pages@v6.0.0
+
+      # 경로 앞부분: 저장소 이름 경로(/playlab). 사용자 도메인을 연결하면 빈 값이 되어 / 로 빌드된다
+      - run: pnpm build:pages
+        env:
+          PLAYLAB_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: pages-dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5.0.1

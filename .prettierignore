@@ -3,3 +3,4 @@ pnpm-lock.yaml
 **/.wrangler/
 # 문서는 한글 표 정렬로 diff가 커지므로 포맷하지 않는다
 *.md
+pages-dist/

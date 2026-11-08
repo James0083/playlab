@@ -6,7 +6,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/', '**/.wrangler/', '**/node_modules/'] },
+  { ignores: ['**/dist/', 'pages-dist/', '**/.wrangler/', '**/node_modules/'] },
 
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
