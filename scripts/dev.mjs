@@ -50,7 +50,7 @@ if (busyPorts.length > 0) {
 console.log('[dev] 엔진 빌드');
 run(['--filter', '@minigames/engine', 'build']);
 console.log('[dev] 홈 빌드(개발 모드)');
-run(['--filter', 'minigames-home', 'build'], { PLAYLAB_DEV: '1' });
+run(['--filter', 'minigames-home', 'build'], { PLAYLAB_LINK_LOCAL_GAMES: '1' });
 
 let isShuttingDown = false;
 /** 홈 개발 서버. 게임 서버가 먼저 죽으면 아직 null일 수 있다 */

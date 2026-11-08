@@ -2,7 +2,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { GAMES } from './games.ts';
-import { GAMES_PLACEHOLDER, renderHome } from './renderHome.ts';
+import {
+  BASE_PATH_PLACEHOLDER,
+  GAMES_PLACEHOLDER,
+  normalizeBasePath,
+  renderHome,
+  withBasePath,
+} from './renderHome.ts';
 
 const template = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
@@ -25,4 +31,23 @@ test('자리표시자가 없는 템플릿은 오류를 낸다', () => {
 test('카드마다 내 최고기록을 채울 자리가 있다', () => {
   const html = renderHome(template, GAMES, { isPlayable: () => true });
   assert.match(html, /data-best-slug="tteokchigi"/);
+});
+
+test('GitHub Pages처럼 경로 앞부분이 있으면 게임 링크 앞에 붙인다', () => {
+  const html = renderHome(template, GAMES, { isPlayable: () => true, basePath: '/playlab/' });
+  assert.match(html, /href="\/playlab\/games\/tteokchigi\/"/);
+});
+
+test('경로 앞부분은 앞뒤에 /가 붙은 꼴로 맞춘다', () => {
+  assert.equal(normalizeBasePath(undefined), '/');
+  assert.equal(normalizeBasePath(''), '/');
+  assert.equal(normalizeBasePath('/'), '/');
+  assert.equal(normalizeBasePath('/playlab'), '/playlab/');
+  assert.equal(normalizeBasePath('playlab/'), '/playlab/');
+});
+
+test('404 페이지의 홈으로 링크가 경로 앞부분을 따른다', () => {
+  const notFound = readFileSync(new URL('../src/404.html', import.meta.url), 'utf8');
+  assert.ok(notFound.includes(`href="${BASE_PATH_PLACEHOLDER}"`));
+  assert.match(withBasePath(notFound, '/playlab/'), /href="\/playlab\/">홈으로/);
 });
