@@ -10,10 +10,26 @@ export interface MotionSample {
    * 자이로가 없어 중력을 분리하지 못하는 기기는 null
    */
   linearAcceleration: { x: number; y: number; z: number } | null;
+  /**
+   * 회전 속도(도/초). alpha는 화면에 수직인 축(z), beta는 x축, gamma는 y축 둘레.
+   * 화면을 볼 때 반시계 방향 회전이 alpha의 양수다. 자이로가 없는 기기는 null
+   */
+  rotationRate: { alpha: number; beta: number; gamma: number } | null;
   /** 기기 방향(도) */
   orientation: { alpha: number; beta: number; gamma: number };
   /** 이벤트 시각(ms, performance.now와 같은 기준) */
   timestamp: number;
+}
+
+/** 센서 값 셋이 모두 있을 때만 벡터로. 하나라도 없으면(센서 없음) null */
+function vectorOf(value: DeviceMotionEventAcceleration | null) {
+  if (value?.x == null || value.y == null || value.z == null) return null;
+  return { x: value.x, y: value.y, z: value.z };
+}
+
+function rotationOf(value: DeviceMotionEventRotationRate | null) {
+  if (value?.alpha == null || value.beta == null || value.gamma == null) return null;
+  return { alpha: value.alpha, beta: value.beta, gamma: value.gamma };
 }
 
 type PermissionCapable = { requestPermission?: () => Promise<'granted' | 'denied'> };
@@ -62,17 +78,14 @@ export function useDeviceMotion(onSample: (sample: MotionSample) => void, enable
     const onMotion = (e: DeviceMotionEvent) => {
       // 스크립트가 만든 가짜 이벤트(dispatchEvent)로 점수를 올리지 못하게 한다
       if (!e.isTrusted) return;
-      const a = e.accelerationIncludingGravity;
+      const acceleration = vectorOf(e.accelerationIncludingGravity);
       // 센서가 없는 기기(데스크톱 등)는 값이 모두 null인 이벤트를 보내기도 한다.
       // 0으로 바꿔 보내면 "중력 없음 = 세게 흔듦"으로 읽히므로 샘플로 치지 않는다.
-      if (a?.x == null || a.y == null || a.z == null) return;
-      const linear = e.acceleration;
+      if (!acceleration) return;
       emitSample({
-        acceleration: { x: a.x, y: a.y, z: a.z },
-        linearAcceleration:
-          linear?.x == null || linear.y == null || linear.z == null
-            ? null
-            : { x: linear.x, y: linear.y, z: linear.z },
+        acceleration,
+        linearAcceleration: vectorOf(e.acceleration),
+        rotationRate: rotationOf(e.rotationRate),
         orientation: { ...orientation },
         timestamp: e.timeStamp,
       });
