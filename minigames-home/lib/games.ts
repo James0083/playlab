@@ -34,4 +34,12 @@ export const GAMES: Game[] = [
     origin: 'https://game-bubble-tea.pages.dev',
     status: 'coming-soon',
   },
+  {
+    slug: 'jjajang',
+    name: '짜장면 비비기',
+    emoji: '🍜',
+    description: '원을 그리며 방향 바꿔 비비기',
+    origin: 'https://game-jjajang.pages.dev',
+    status: 'coming-soon',
+  },
 ];

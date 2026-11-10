@@ -1,0 +1,340 @@
+/* 짜장면 비비기 전용 스타일. 화면 색은 엔진의 --mg-* 변수, 그릇 그림 색은 Bowl.tsx에 있다 */
+
+:root {
+  /* 한쪽으로 돌린 구간 색: 바꾸기 좋음(초록)·뭉침(빨강은 --mg-danger). 짧음은 --mg-border */
+  --jj-good: #2e9d5b;
+  --jj-bonus: #e0a21b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --jj-good: #4cc982;
+    --jj-bonus: #f2bd45;
+  }
+}
+
+/* 돌리는 동안 당겨서 새로고침·스크롤로 화면이 움직이지 않게 한다 */
+body {
+  overscroll-behavior: none;
+}
+
+.jj-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 66vh;
+  min-height: 420px;
+  padding: 12px 0 0;
+  border: 1px solid var(--mg-border);
+  border-radius: 16px;
+  background: var(--mg-surface);
+  color: inherit;
+  font: inherit;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 가로 화면(폰을 돌리다 돌아간 경우)에서는 높이를 화면에 맞춰 스크롤이 생기지 않게 한다 */
+@media (orientation: landscape) and (max-height: 500px) {
+  .jj-field {
+    height: calc(100vh - 80px);
+    min-height: 0;
+  }
+}
+/* 플레이 중: 원을 그릴 때 스크롤·확대로 입력이 새지 않게 한다 */
+.jj-field-playing {
+  touch-action: none;
+  cursor: grab;
+}
+.jj-field-playing:active {
+  cursor: grabbing;
+}
+.jj-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  /* 그릇이 비쳐 보이면서도 글자가 읽히도록 반투명 바탕을 깐다 */
+  background: color-mix(in srgb, var(--mg-surface) 76%, transparent);
+}
+.jj-guide {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+.jj-rule {
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--mg-bg);
+  font-size: 14px;
+  text-align: center;
+}
+.jj-notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--mg-bg);
+  font-weight: 700;
+  text-align: center;
+}
+.jj-hint {
+  color: var(--mg-muted);
+  font-size: 14px;
+  text-align: center;
+}
+/* 원 그리기·키보드 모드 안내는 눈에 띄게: 폰을 돌리던 사람이 방식이 바뀐 것을 알아채야 한다 */
+.jj-hint-strong {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--mg-accent);
+  color: var(--mg-on-accent);
+  font-weight: 700;
+}
+
+.jj-bowl-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+}
+.jj-bowl {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* 그릇 위 안내: 비빔 게이지, 한쪽 게이지, 방향 바꾸기 칸 */
+.jj-hud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(300px, 86%);
+}
+.jj-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+}
+.jj-meter-label {
+  width: 2.5em;
+}
+.jj-meter-track,
+.jj-stroke-track {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--mg-border);
+  overflow: hidden;
+}
+.jj-meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--mg-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+/* 한쪽 게이지 띠: 짧음(회색) → 바꾸기 좋음(초록) → 뭉침(빨강). 경계는 Hud.tsx가 규칙 값으로 넘긴다 */
+.jj-stroke-track {
+  overflow: visible;
+  background: linear-gradient(
+    to right,
+    var(--mg-border) var(--jj-good-at),
+    var(--jj-good) var(--jj-good-at) var(--jj-clump-at),
+    var(--mg-danger) var(--jj-clump-at)
+  );
+}
+/* 바늘: 트랙 전체 폭을 기준으로 translateX(%)로 움직이도록 트랙과 같은 폭의 상자 안에 둔다 */
+.jj-stroke-marker {
+  position: absolute;
+  inset: -4px 0;
+  transform: translateX(0);
+}
+.jj-stroke-marker::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--mg-text);
+}
+.jj-meter-text {
+  min-width: 3.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.jj-pips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.jj-pips-label {
+  margin-right: 4px;
+}
+.jj-pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--mg-border);
+}
+.jj-pip-on {
+  border-color: var(--jj-bonus);
+  background: var(--jj-bonus);
+}
+
+/* 뭉침 경고. 자리를 미리 잡아 두어 나타날 때 그릇이 밀리지 않게 한다 */
+.jj-clump {
+  margin: 0 0 12px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--mg-danger);
+  color: #fff;
+  font-weight: 800;
+  visibility: hidden;
+}
+.jj-clump-visible {
+  visibility: visible;
+  animation: jj-wobble 220ms linear infinite;
+}
+
+/* 방향 바꾸기 보너스 "+5" */
+.jj-bonus {
+  fill: var(--jj-bonus);
+  font-size: 22px;
+  font-weight: 800;
+  animation: jj-float-up 800ms ease-out forwards;
+}
+
+/* 끝나는 연출: 젓가락이 면을 들어 올리고 그릇이 한 번 통 튄다 */
+.jj-dish-done {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: jj-hop 500ms ease-out 300ms;
+}
+.jj-chopsticks-lift {
+  animation: jj-lift 700ms ease-out forwards;
+}
+
+/* 결과 화면: 한쪽으로 돌린 구간 그래프와 다음 판 팁 */
+.jj-graph {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  height: 96px;
+  padding-bottom: 18px;
+}
+/* 바꾸기 좋은 길이(1~2바퀴) 띠. 위치는 ResultStats.tsx가 규칙 값으로 정한다 */
+.jj-graph-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--jj-good) 18%, transparent);
+}
+.jj-graph-column {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+.jj-graph-bar {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+}
+.jj-zone-short {
+  background: var(--mg-border);
+}
+.jj-zone-good {
+  background: var(--jj-good);
+}
+.jj-zone-clump {
+  background: var(--mg-danger);
+}
+.jj-graph-direction {
+  position: absolute;
+  bottom: -18px;
+  font-size: 12px;
+  color: var(--mg-muted);
+}
+.jj-advice {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 화면에는 안 보이고 스크린리더만 읽는다 */
+.jj-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes jj-wobble {
+  25% {
+    transform: rotate(-2deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes jj-float-up {
+  to {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+}
+@keyframes jj-hop {
+  40% {
+    transform: translateY(-4%) scale(1.02, 0.98);
+  }
+}
+@keyframes jj-lift {
+  to {
+    transform: translate(10px, -40px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jj-clump-visible,
+  .jj-dish-done,
+  .jj-chopsticks-lift {
+    animation: none;
+  }
+  .jj-bonus {
+    animation: jj-fade-out 800ms forwards;
+  }
+}
+@keyframes jj-fade-out {
+  to {
+    opacity: 0;
+  }
+}
