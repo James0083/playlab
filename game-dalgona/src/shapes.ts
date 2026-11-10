@@ -25,24 +25,13 @@ export interface PathPosition {
   arc: number;
 }
 
-export interface ShapePath {
-  /** 선을 따라 잰 전체 길이 */
-  length: number;
-  /** 닫힌 선이면 끝에서 시작으로 이어진다 */
-  isClosed: boolean;
-}
-
 export interface Shape extends ShapeDefinition {
-  /** 반드시 긁고 지나가야 하는 점들. 윤곽선을 CHECKPOINT_SPACING 간격으로 나눈 것 */
+  /** 반드시 따라 그려야 하는 점들(화면의 점선). 윤곽선을 CHECKPOINT_SPACING 간격으로 나눈 것 */
   checkpoints: readonly Point[];
-  /** checkpoints와 같은 순서로, 각 체크포인트의 선 위 위치 */
-  checkpointPositions: readonly PathPosition[];
   /** 선과의 거리 계산에 쓰는 짧은 선분들 */
   segments: readonly Segment[];
   /** segments와 같은 순서로, 각 선분 시작점의 선 위 위치 */
   segmentPositions: readonly PathPosition[];
-  /** strokes와 같은 순서로, 선마다 길이와 닫힘 여부 */
-  paths: readonly ShapePath[];
 }
 
 /** 체크포인트 간격(보드 단위). 작을수록 촘촘히 긁어야 한다 */
@@ -309,10 +298,8 @@ function buildPath(stroke: Stroke, strokeIndex: number) {
   const position = (i: number): PathPosition => ({ stroke: strokeIndex, arc: arcs[i] ?? 0 });
   return {
     checkpoints,
-    checkpointPositions: checkpoints.map((_, i) => position(i)),
     segments,
     segmentPositions: segments.map((_, i) => position(i)),
-    path: { length: arcs.at(-1) ?? 0, isClosed: isClosedStroke(stroke) },
   };
 }
 
@@ -321,10 +308,8 @@ function buildShape(definition: ShapeDefinition): Shape {
   return {
     ...definition,
     checkpoints: built.flatMap((part) => part.checkpoints),
-    checkpointPositions: built.flatMap((part) => part.checkpointPositions),
     segments: built.flatMap((part) => part.segments),
     segmentPositions: built.flatMap((part) => part.segmentPositions),
-    paths: built.map((part) => part.path),
   };
 }
 

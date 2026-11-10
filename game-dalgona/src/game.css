@@ -164,7 +164,16 @@
   stroke-width: 0.9;
   stroke-opacity: 0.85;
 }
-/* 긁은 자국: 바늘이 지나간 경로를 따라 이어지는 밝은 홈 */
+/* 따라 그릴 점선(눌러 찍힌 점). 그린 점은 흐려져 남은 곳이 보인다 */
+.dg-dot {
+  fill: var(--dg-line);
+  fill-opacity: 0.9;
+  transition: fill-opacity 150ms;
+}
+.dg-dot-done {
+  fill-opacity: 0.15;
+}
+/* 그린 자국: 손이 지나간 자리 그대로 이어지는 밝은 홈 */
 .dg-trail {
   fill: none;
   stroke: var(--dg-scraped);

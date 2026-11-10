@@ -17,9 +17,11 @@ test('완벽하게 뽑으면 기준 점수를 그대로 받는다', () => {
   assert.equal(finalScore(square, startTrace(square)), 300);
 });
 
-test('정확도가 0이면 절반, 금 하나당 15%씩 깎인다', () => {
+test('정확도가 0이면 20%, 금 하나당 15%씩 깎인다', () => {
   const sloppy = { ...startTrace(square), deviationTotal: 50, sampleCount: 10 }; // 평균 이탈 5 = 정확도 0
-  assert.equal(finalScore(square, sloppy), 150);
+  assert.equal(finalScore(square, sloppy), 60);
+  const half = { ...startTrace(square), deviationTotal: 15, sampleCount: 10 }; // 평균 이탈 1.5 = 정확도 0.5
+  assert.equal(finalScore(square, half), 180);
   const cracked = { ...startTrace(square), cracks: 2 };
   assert.equal(finalScore(square, cracked), 210);
 });

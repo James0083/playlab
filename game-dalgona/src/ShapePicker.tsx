@@ -24,7 +24,7 @@ export function ShapePicker({ slug, shapes, unlockedCount, onSelect }: ShapePick
   return (
     <div className="dg-picker">
       <p className="mg-muted">
-        선을 따라 긁어 모양을 뽑으세요. 선을 벗어나면 금이 가요(3번이면 끝).
+        점선을 따라 정확하게 그릴수록 점수가 높아요. 선을 벗어나면 금이 가요(3번이면 끝).
       </p>
       <ul className="dg-shapes">
         {shapes.map((shape, i) => {

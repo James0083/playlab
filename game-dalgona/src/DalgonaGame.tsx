@@ -13,6 +13,7 @@ import {
   drawTrace,
   endTrail,
   extendTrail,
+  startTrail,
   toBoardPoint,
   type BoardElements,
 } from './Board.tsx';
@@ -31,7 +32,7 @@ import { DalgonaResult, type Outcome } from './DalgonaResult.tsx';
 import { ShapePicker } from './ShapePicker.tsx';
 import { getShape, SHAPES, type Point } from './shapes.ts';
 import { playBreak, playComplete, playCrack } from './sounds.ts';
-import { liftNeedle, startTrace, traceMove, type TraceState } from './trace.ts';
+import { startTrace, traceMove, type TraceState } from './trace.ts';
 
 const SLUG = 'dalgona';
 const TITLE = '달고나 뽑기';
@@ -71,6 +72,7 @@ export function DalgonaGame() {
   const needle = useRef<Point | null>(null);
   const boardElements = useRef<BoardElements>({
     trail: { layer: null, current: null, last: null },
+    dots: [],
     needle: null,
     progress: null,
   });
@@ -119,12 +121,34 @@ export function DalgonaGame() {
     setFinale(result === 'complete' ? 'complete' : 'broken');
   };
 
+  /** 그린 결과를 반영한다: 화면 갱신, 금이 늘었으면 소리·진동, 깨졌거나 완성했으면 끝 */
+  const applyTrace = (before: TraceState, after: TraceState, point: Point) => {
+    trace.current = after;
+    needle.current = point;
+    drawTrace(boardElements.current, { trace: after, needle: point });
+    if (after.cracks > before.cracks) {
+      setCrackPoints(after.crackPoints);
+      vibrate(CRACK_VIBRATION);
+      playCrack();
+    }
+    if (isBroken(after)) finish('broken', after);
+    else if (isComplete(after)) finish('complete', after);
+  };
+
   const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
-    if (!canScrape) return;
+    const before = trace.current;
+    if (!canScrape || !before) return;
     if (isReady) session.begin(); // 첫 터치에서 시간이 가기 시작한다
-    // 손가락이 판 밖으로 나가도 계속 이벤트를 받는다
-    event.currentTarget.setPointerCapture(event.pointerId);
-    needle.current = toBoardPoint(event.currentTarget, event.nativeEvent);
+    try {
+      // 손가락이 판 밖으로 나가도 계속 이벤트를 받는다
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      /* 캡처하지 못해도 판 안에서는 그릴 수 있다 */
+    }
+    const point = toBoardPoint(event.currentTarget, event.nativeEvent);
+    startTrail(boardElements.current.trail, point);
+    // 처음 댄 자리도 그린 것으로 검사한다(선에서 먼 곳에 대면 금이 간다)
+    applyTrace(before, traceMove(before, shape, { from: point, to: point }), point);
   };
 
   const handlePointerMove = (event: PointerEvent<SVGSVGElement>) => {
@@ -136,27 +160,16 @@ export function DalgonaGame() {
     for (const sample of pointerSamples(event)) {
       const to = toBoardPoint(event.currentTarget, sample);
       after = traceMove(after, shape, { from, to });
-      extendTrail(boardElements.current.trail, shape, { from, to });
+      extendTrail(boardElements.current.trail, to);
       from = to;
     }
-    trace.current = after;
-    needle.current = from;
-    drawTrace(boardElements.current, { trace: after, needle: from });
-
-    if (after.cracks > before.cracks) {
-      setCrackPoints(after.crackPoints);
-      vibrate(CRACK_VIBRATION);
-      playCrack();
-    }
-    if (isBroken(after)) finish('broken', after);
-    else if (isComplete(after)) finish('complete', after);
+    applyTrace(before, after, from);
   };
 
   const handlePointerUp = () => {
     needle.current = null;
-    endTrail(boardElements.current.trail); // 손을 떼면 긁은 자국도 끊긴다
+    endTrail(boardElements.current.trail); // 손을 떼면 그린 자국도 끊긴다(다음에 댄 곳과 잇지 않는다)
     if (!trace.current) return;
-    trace.current = liftNeedle(trace.current); // 다음에 댄 곳을 지금 자리와 잇지 않는다
     drawTrace(boardElements.current, { trace: trace.current, needle: null });
   };
 
@@ -193,7 +206,7 @@ export function DalgonaGame() {
           shape={shape}
           crackPoints={crackPoints}
           finale={finale}
-          overlay={isReady ? <p className="dg-ready">선에 바늘을 대면 시작해요</p> : null}
+          overlay={isReady ? <p className="dg-ready">점선을 따라 정확하게 그려요</p> : null}
           elementsRef={boardElements}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}

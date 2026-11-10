@@ -2,28 +2,23 @@ import { useEffect, useRef, type PointerEvent, type ReactNode, type RefObject } 
 import { Candy, CandyDefinitions } from './Candy.tsx';
 import { BrokenCandy, HoledCandy, ShapePiece, type FinaleKind } from './Finale.tsx';
 import { MAX_CRACKS, progressOf } from './rules.ts';
-import { distance, formatPoints, type PathPosition, type Point, type Shape } from './shapes.ts';
-import {
-  cornersWithin,
-  nearestOnShape,
-  pathSpan,
-  samplePath,
-  VISIT_RADIUS,
-  type TraceState,
-} from './trace.ts';
+import { distance, formatPoints, type Point, type Shape } from './shapes.ts';
+import type { TraceState } from './trace.ts';
 
-/** 긁은 자국(흰 선)을 그리는 상태. 이어 긋는 동안 같은 선에 점을 덧붙인다 */
+/** 그린 자국(흰 선)을 그리는 상태. 이어 긋는 동안 같은 선에 점을 덧붙인다 */
 export interface ScratchTrail {
   layer: SVGGElement | null;
-  /** 지금 이어 그리는 선. 손을 떼거나 선에서 벗어나면 null이 되고 다음에 새 선을 시작한다 */
+  /** 지금 이어 그리는 선. 손을 떼면 null이 되고 다음에 새 선을 시작한다 */
   current: SVGPolylineElement | null;
-  /** 마지막으로 덧붙인 점과 그 선 위 위치 */
-  last: { point: Point; position: PathPosition } | null;
+  /** 마지막으로 덧붙인 점 */
+  last: Point | null;
 }
 
-/** 긁을 때마다 직접 갱신하는 요소들. React 상태로 다루면 포인터가 움직일 때마다 전체를 다시 그린다 */
+/** 그릴 때마다 직접 갱신하는 요소들. React 상태로 다루면 포인터가 움직일 때마다 전체를 다시 그린다 */
 export interface BoardElements {
   trail: ScratchTrail;
+  /** 점선의 점들(shape.checkpoints와 같은 순서). 그린 점은 흐려진다 */
+  dots: (SVGCircleElement | null)[];
   needle: SVGGElement | null;
   progress: HTMLSpanElement | null;
 }
@@ -38,48 +33,34 @@ function appendPoint(trail: ScratchTrail, point: Point): void {
   svgPoint.x = point.x;
   svgPoint.y = point.y;
   trail.current.points.appendItem(svgPoint);
+  trail.last = point;
 }
 
-function startPolyline(trail: ScratchTrail): void {
+/** 손을 댄 자리에서 새 자국을 시작한다 */
+export function startTrail(trail: ScratchTrail, point: Point): void {
+  if (!trail.layer) return;
   trail.current = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
   trail.current.setAttribute('class', 'dg-trail');
-  trail.layer?.append(trail.current);
+  trail.layer.append(trail.current);
+  appendPoint(trail, point);
 }
 
 /**
- * 바늘이 from에서 to로 지나간 경로를 따라 긁은 자국을 늘린다.
- * 경로를 1단위로 쪼개 선 가까이(VISIT_RADIUS 안)를 지난 지점만 윤곽선 위로 옮기고,
- * 직전 지점과 선을 따라 이어지면(trace.ts의 pathSpan) 그 사이 모서리를 거쳐 이어 긋는다.
- * 판정과 같은 규칙이라 흰 선이 이어진 곳이 곧 긁힌 곳이다.
+ * 손이 지나간 자리를 그대로 이어 긋는다. 선 위로 옮겨 그리지 않는다(2026-11-10 자동 보정 제거):
+ * 흰 선이 곧 내가 그린 그림이다.
  */
-export function extendTrail(trail: ScratchTrail, shape: Shape, move: { from: Point; to: Point }) {
-  if (!trail.layer) return;
-  for (const sample of samplePath(move.from, move.to)) {
-    const nearest = nearestOnShape(shape, sample);
-    if (nearest.distance > VISIT_RADIUS) {
-      endTrail(trail);
-      continue;
-    }
-    const span = trail.last && pathSpan(shape, trail.last.position, nearest.position);
-    if (!trail.current || !span) {
-      startPolyline(trail);
-    } else if (distance(trail.last?.point ?? nearest.point, nearest.point) < TRAIL_MIN_STEP) {
-      continue;
-    } else {
-      cornersWithin(shape, span).forEach((corner) => appendPoint(trail, corner));
-    }
-    appendPoint(trail, nearest.point);
-    trail.last = { point: nearest.point, position: nearest.position };
-  }
+export function extendTrail(trail: ScratchTrail, point: Point): void {
+  if (!trail.current || (trail.last && distance(trail.last, point) < TRAIL_MIN_STEP)) return;
+  appendPoint(trail, point);
 }
 
-/** 지금 긋던 자국을 끝낸다(손을 뗐을 때). 다음 긁기는 새 선으로 시작한다 */
+/** 지금 긋던 자국을 끝낸다(손을 뗐을 때). 다음 긋기는 새 선으로 시작한다 */
 export function endTrail(trail: ScratchTrail): void {
   trail.current = null;
   trail.last = null;
 }
 
-/** 바늘 위치와 진행률을 그린다 */
+/** 바늘 위치, 점선(그린 점은 흐리게), 진행률을 그린다 */
 export function drawTrace(
   elements: BoardElements,
   { trace, needle }: { trace: TraceState; needle: Point | null },
@@ -88,6 +69,10 @@ export function drawTrace(
     elements.needle.classList.toggle('dg-needle-visible', needle !== null);
     if (needle) elements.needle.setAttribute('transform', `translate(${needle.x} ${needle.y})`);
   }
+  elements.dots.forEach((dot, i) => {
+    const className = trace.visited[i] ? 'dg-dot dg-dot-done' : 'dg-dot';
+    if (dot && dot.getAttribute('class') !== className) dot.setAttribute('class', className);
+  });
   if (elements.progress) {
     elements.progress.textContent = `${Math.floor(progressOf(trace) * 100)}%`;
   }
@@ -209,7 +194,7 @@ export function Board({
           className={finale ? `dg-board dg-finale-${finale}` : 'dg-board'}
           viewBox="0 0 100 100"
           role="img"
-          aria-label={`${shape.name} 달고나. 선을 따라 드래그해서 긁으세요`}
+          aria-label={`${shape.name} 달고나. 점선을 따라 정확하게 그리세요`}
           onPointerDown={handlers.onPointerDown}
           onPointerMove={handlers.onPointerMove}
           onPointerUp={handlers.onPointerUp}
@@ -228,14 +213,20 @@ export function Board({
           {finale === null && (
             <g>
               <Candy />
-              {/* 눌러 찍은 홈: 어두운 선 위에 밝은 선을 살짝 어긋나게 겹쳐 파인 것처럼 보이게 한다 */}
-              {shape.strokes.map((stroke, i) => (
-                <g key={i}>
-                  <polyline className="dg-groove-light" points={formatPoints(stroke)} />
-                  <polyline className="dg-groove-dark" points={formatPoints(stroke)} />
-                </g>
+              {/* 따라 그릴 점선: 눌러 찍힌 점들. 그린 점은 drawTrace가 흐리게 바꾼다 */}
+              {shape.checkpoints.map(({ x, y }, i) => (
+                <circle
+                  key={i}
+                  ref={(node) => {
+                    elementsRef.current.dots[i] = node;
+                  }}
+                  className="dg-dot"
+                  cx={x}
+                  cy={y}
+                  r={0.65}
+                />
               ))}
-              {/* 긁은 자국: extendTrail이 바늘이 지나간 경로를 따라 선을 덧붙인다 */}
+              {/* 그린 자국: extendTrail이 손이 지나간 자리를 그대로 덧붙인다 */}
               <g
                 ref={(node) => {
                   elementsRef.current.trail.layer = node;
