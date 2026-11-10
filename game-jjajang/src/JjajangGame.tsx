@@ -1,5 +1,6 @@
 import {
   GameShell,
+  backGoesHome,
   goHome,
   ScoreResult,
   unlockAudio,
@@ -289,8 +290,8 @@ export function JjajangGame() {
     startRound();
   };
 
-  // 시작 화면에서는 홈으로, 그 외(카운트다운·플레이·결과)에서는 시작 화면으로 돌아간다
-  const handleBack = phase === 'idle' ? goHome : backToStart;
+  // 시작 화면·결과 화면에서는 게임 목록(홈)으로, 카운트다운·플레이 중에는 시작 화면으로 돌아간다
+  const handleBack = backGoesHome(phase) ? goHome : backToStart;
   const bowl = (
     <Bowl elementsRef={bowlElements} bonusSwitches={bonusSwitches} isFinished={isFinished} />
   );

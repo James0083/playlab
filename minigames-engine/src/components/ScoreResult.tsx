@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useLeaderboard } from '../hooks/useLeaderboard.ts';
 import { getLocalBest, getSavedNickname, saveLocalBest, submitScore } from '../lib/score.ts';
+import { goHome } from '../lib/navigation.ts';
 import { isSupabaseConfigured } from '../lib/supabase.ts';
 import { Leaderboard } from './Leaderboard.tsx';
 import { ShareButton } from './ShareButton.tsx';
@@ -96,6 +97,10 @@ export function ScoreResult({
         )}
         {/* 0점은 자랑할 거리가 없어 공유 버튼을 숨긴다 */}
         {score > 0 && <ShareButton title={title} score={score} headline={headline} />}
+        {/* 모든 게임 공통: 결과를 보고 다른 게임으로 갈 수 있게 한다(헤더의 ←와 같은 동작) */}
+        <button type="button" className="mg-button mg-button-secondary" onClick={goHome}>
+          게임 목록으로
+        </button>
       </div>
 
       {/* 랭킹은 결과와 함께 바로 보인다 */}

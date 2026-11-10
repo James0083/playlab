@@ -1,5 +1,6 @@
 import {
   GameShell,
+  backGoesHome,
   goHome,
   readStorage,
   unlockAudio,
@@ -184,8 +185,8 @@ export function DalgonaGame() {
     setFinale(null);
     session.reset();
   };
-  // 모양 선택 화면에서는 홈으로, 그 외(준비·플레이·결과)에서는 모양 선택으로 돌아간다
-  const handleBack = phase === 'idle' ? goHome : backToPicker;
+  // 모양 선택·결과 화면에서는 게임 목록(홈)으로, 준비·플레이 중에는 모양 선택으로 돌아간다
+  const handleBack = backGoesHome(phase) ? goHome : backToPicker;
 
   return (
     <GameShell

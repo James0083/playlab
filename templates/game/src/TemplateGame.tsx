@@ -3,6 +3,7 @@ import {
   createGameClock,
   GameShell,
   getAudioContext,
+  backGoesHome,
   goHome,
   ScoreResult,
   unlockAudio,
@@ -72,8 +73,8 @@ export function TemplateGame() {
     handleTap();
   };
 
-  // 시작 화면에서는 홈으로, 그 외(카운트다운·플레이·결과)에서는 시작 화면으로 돌아간다
-  const handleBack = phase === 'idle' ? goHome : session.reset;
+  // 시작 화면·결과 화면에서는 게임 목록(홈)으로, 카운트다운·플레이 중에는 시작 화면으로 돌아간다
+  const handleBack = backGoesHome(phase) ? goHome : session.reset;
 
   return (
     <GameShell
