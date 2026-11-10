@@ -7,7 +7,7 @@ james-playlab.com 미니게임 모노레포. 계획과 결정 사항은 [minigam
 | `minigames-engine/` | `@minigames/engine`: 훅, 공통 컴포넌트, Supabase 래퍼, `supabase/migrations` | 배포 안 함 (`workspace:*`) |
 | `minigames-home/` | 홈(정적) + 라우터 Worker. 게임 목록 단일 소스는 `lib/games.ts` | wrangler |
 | `game-tteokchigi/` | 떡치기 (Vite + React). 판정 규칙은 `src/rules.ts` | Cloudflare Pages |
-| `game-dalgona/` | 달고나 뽑기. 모양은 `src/shapes.ts`, 긁기 판정은 `src/trace.ts` | Cloudflare Pages |
+| `game-dalgona/` | 달고나 뽑기. 모양은 `src/shapes.ts`, 따라 그리기 판정은 `src/trace.ts` | Cloudflare Pages |
 | `game-bubble-tea/` | 버블티 흔들기. 흔들기 규칙은 `src/rules.ts`, 컵 그림은 `src/Cup.tsx` | Cloudflare Pages |
 | `game-jjajang/` | 짜장면 비비기. 회전·뭉침 규칙은 `src/rules.ts`, 그릇 그림은 `src/Bowl.tsx` | Cloudflare Pages |
 | `templates/game/` | 새 게임 템플릿(10초 탭 세기 예시). `pnpm new-game`이 복사한다 | 배포 안 함 |
