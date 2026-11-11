@@ -22,7 +22,7 @@ export const GAMES: Game[] = [
     slug: 'dalgona',
     name: '달고나 뽑기',
     emoji: '🍯',
-    description: '선을 벗어나지 않게 드래그',
+    description: '점선을 따라 정확하게 그리기',
     origin: 'https://game-dalgona.pages.dev',
     status: 'coming-soon',
   },
@@ -40,6 +40,14 @@ export const GAMES: Game[] = [
     emoji: '🍜',
     description: '원을 그리며 방향 바꿔 비비기',
     origin: 'https://game-jjajang.pages.dev',
+    status: 'coming-soon',
+  },
+  {
+    slug: 'paengi',
+    name: '팽이 돌리기',
+    emoji: '🌀',
+    description: '빨리 돌리고 기울여서 오래 버티기',
+    origin: 'https://game-paengi.pages.dev',
     status: 'coming-soon',
   },
 ];

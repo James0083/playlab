@@ -1,0 +1,174 @@
+/* 팽이 돌리기 전용 스타일. 화면 색은 엔진의 --mg-* 변수, 판·팽이 색은 Dish.tsx에 있다 */
+
+/* 장면: 나무 마루 */
+:root {
+  --pg-floor: #efd9b8;
+  --pg-floor-dark: #dfc39b;
+  --pg-plank: rgb(90 50 20 / 0.12);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pg-floor: #3a2d20;
+    --pg-floor-dark: #2d231a;
+    --pg-plank: rgb(0 0 0 / 0.25);
+  }
+}
+
+/* 돌리고 기울이는 동안 당겨서 새로고침·스크롤로 화면이 움직이지 않게 한다 */
+body {
+  overscroll-behavior: none;
+}
+
+.pg-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 66vh;
+  min-height: 420px;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 16px;
+  background:
+    repeating-linear-gradient(90deg, var(--pg-plank) 0 1px, transparent 1px 44px),
+    linear-gradient(to bottom, var(--pg-floor), var(--pg-floor-dark));
+  color: inherit;
+  font: inherit;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 가로 화면에서는 높이를 화면에 맞춰 스크롤이 생기지 않게 한다 */
+@media (orientation: landscape) and (max-height: 500px) {
+  .pg-field {
+    height: calc(100vh - 80px);
+    min-height: 0;
+  }
+}
+/* 플레이 중: 원을 그리거나 누를 때 스크롤·확대로 입력이 새지 않게 한다 */
+.pg-field-playing {
+  touch-action: none;
+  cursor: pointer;
+}
+.pg-steps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 16px;
+  text-align: center;
+}
+.pg-steps strong {
+  margin-right: 6px;
+}
+.pg-hint {
+  min-height: 1.6em;
+  color: var(--mg-muted);
+  font-size: 14px;
+  text-align: center;
+}
+/* 화면·키보드 모드 안내는 눈에 띄게: 폰을 쓰던 사람이 방식이 바뀐 것을 알아채야 한다 */
+.pg-hint-strong {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--mg-accent);
+  color: var(--mg-on-accent);
+  font-weight: 700;
+}
+
+.pg-dish-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 0;
+}
+.pg-dish {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  /* 쓰러진 팽이가 판 가장자리 밖으로 조금 나와도 잘리지 않게 */
+  overflow: visible;
+}
+
+/* 시작 화면: 시작 카드가 판 아랫부분을 가리지 않도록 판을 위로 올린다 */
+.pg-field:not(.pg-field-playing) .pg-dish-wrap {
+  padding-bottom: 180px;
+}
+/* 시작 화면에서는 게이지가 0이라 숨기고 판만 보여준다(자리는 유지) */
+.pg-field:not(.pg-field-playing) .pg-hud {
+  visibility: hidden;
+}
+/* 판 위 안내: 회전 게이지와 시간 */
+.pg-hud {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(320px, 90%);
+  font-size: 14px;
+  font-weight: 700;
+}
+/* 회전 게이지는 시간 표시 옆에서 남은 폭을 다 쓴다 */
+.pg-hud .mg-meter {
+  flex: 1;
+  width: auto;
+}
+.pg-time {
+  min-width: 6.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 가장자리 경고. 자리를 미리 잡아 두어 나타날 때 판이 밀리지 않게 한다 */
+.pg-edge {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--mg-danger);
+  color: #fff;
+  font-weight: 800;
+  visibility: hidden;
+}
+.pg-edge-visible {
+  visibility: visible;
+}
+
+/* 돌리기 안내 점선이 흘러 원을 그리라는 것을 보여준다 */
+.pg-guide {
+  animation: pg-guide-flow 1.2s linear infinite;
+  opacity: 0.9;
+}
+
+.pg-advice {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 화면에는 안 보이고 스크린리더만 읽는다 */
+.pg-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes pg-guide-flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-guide {
+    animation: none;
+  }
+}
