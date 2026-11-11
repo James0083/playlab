@@ -50,4 +50,12 @@ export const GAMES: Game[] = [
     origin: 'https://game-paengi.pages.dev',
     status: 'coming-soon',
   },
+  {
+    slug: 'jegi',
+    name: '제기차기',
+    emoji: '🪶',
+    description: '제기가 발등에 닿는 순간 탭, 헛차면 끝',
+    origin: 'https://game-jegi.pages.dev',
+    status: 'coming-soon',
+  },
 ];

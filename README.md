@@ -11,6 +11,7 @@ james-playlab.com 미니게임 모노레포. 계획과 결정 사항은 [minigam
 | `game-bubble-tea/` | 버블티 흔들기. 흔들기 규칙은 `src/rules.ts`, 컵 그림은 `src/Cup.tsx` | Cloudflare Pages |
 | `game-jjajang/` | 짜장면 비비기. 회전·뭉침 규칙은 `src/rules.ts`, 그릇 그림은 `src/Bowl.tsx` | Cloudflare Pages |
 | `game-paengi/` | 팽이 돌리기. 돌리기·균형 규칙은 `src/rules.ts`, 판과 팽이 그림은 `src/Dish.tsx` | Cloudflare Pages |
+| `game-jegi/` | 제기차기. 킥 시각·판정·점수는 `src/rules.ts`, 제기 높이는 `src/motion.ts`, 장면 그림은 `src/Scene.tsx` | Cloudflare Pages |
 | `templates/game/` | 새 게임 템플릿(10초 탭 세기 예시). `pnpm new-game`이 복사한다 | 배포 안 함 |
 
 요구 사항: Node 24, pnpm 12.15.0 (`packageManager` 필드에 고정)

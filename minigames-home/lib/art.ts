@@ -42,6 +42,14 @@ export const GAME_ART: Readonly<Record<string, string>> = {
   <circle cx="32" cy="32" r="8" fill="#f0c32a"/>
   <circle cx="32" cy="32" r="4.5" fill="#7cc742"/>
 </svg>`,
+  jegi: `<svg ${VIEWBOX}>
+  <g stroke-linecap="round" stroke-width="4"><line x1="30" y1="22" x2="20" y2="6" stroke="#e2574c"/><line x1="32" y1="22" x2="28" y2="3" stroke="#f0c32a"/><line x1="34" y1="22" x2="36" y2="3" stroke="#4aa3df"/><line x1="36" y1="22" x2="44" y2="6" stroke="#7cc742"/></g>
+  <ellipse cx="32" cy="26" rx="11" ry="5" fill="#b8892f"/>
+  <ellipse cx="32" cy="24.5" rx="11" ry="5" fill="#e0b24a"/>
+  <rect x="29.5" y="22" width="5" height="4" rx="1" fill="#8a6220"/>
+  <path d="M10 60c4-10 18-16 34-14 8 1 8 8 0 10-10 2-20 4-26 8z" fill="#fbf7ee" stroke="#c9bfa8" stroke-width="1.5"/>
+  <rect x="6" y="54" width="14" height="10" rx="4" fill="#3d5a99"/>
+</svg>`,
 };
 
 /** 카드에 넣을 그림. 그림이 없는 게임은 이모지 */
