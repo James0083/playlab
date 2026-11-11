@@ -1,0 +1,122 @@
+/* 제기차기 전용 스타일. 색은 엔진의 --mg-* 변수, 장면 색은 Scene.tsx에 있다 */
+
+/* 장면: 하늘 아래 흙 마당 */
+:root {
+  --jg-sky: #cfe6f3;
+  --jg-yard: #dcc196;
+  --jg-yard-dark: #c8a874;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --jg-sky: #26364a;
+    --jg-yard: #4a3b29;
+    --jg-yard-dark: #3b2f20;
+  }
+}
+
+/* 빠르게 연타하는 동안 확대·당겨서 새로고침으로 입력이 새지 않게 한다 */
+body {
+  overscroll-behavior: none;
+}
+
+.jg-field {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 66vh;
+  min-height: 420px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  /* 위쪽 70%는 하늘, 아래는 마당 */
+  background: linear-gradient(
+    to bottom,
+    var(--jg-sky) 0 70%,
+    var(--jg-yard) 70%,
+    var(--jg-yard-dark) 100%
+  );
+  color: inherit;
+  font: inherit;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 가로 화면에서는 높이를 화면에 맞춰 스크롤이 생기지 않게 한다 */
+@media (orientation: landscape) and (max-height: 500px) {
+  .jg-field {
+    height: calc(100vh - 80px);
+    min-height: 0;
+  }
+}
+.jg-field-playing {
+  touch-action: none;
+  cursor: pointer;
+}
+
+.jg-scene {
+  width: 100%;
+  height: 100%;
+}
+
+/* 플레이 중 안내: 찬 횟수·배율, 판정 문구 */
+.jg-hud {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.jg-count {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--mg-surface);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.jg-count b {
+  color: var(--mg-accent);
+}
+.jg-judge {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--mg-surface);
+  font-size: 20px;
+  font-weight: 800;
+  animation: jg-pop 0.35s ease-out;
+}
+.jg-judge-PERFECT {
+  color: var(--mg-accent);
+}
+.jg-judge-GOOD {
+  color: var(--mg-muted);
+}
+
+.jg-advice {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+@keyframes jg-pop {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jg-judge {
+    animation: none;
+  }
+}

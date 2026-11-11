@@ -104,10 +104,12 @@ grant execute on function public.get_top10(text, text) to anon, authenticated;
 -- 버블티는 game-bubble-tea/src/rules.ts의 MAX_SCORE(섞임 100 + 적정 세기 30 + 넘치지 않음 20)와 같아야 한다.
 -- 짜장면은 game-jjajang/src/rules.ts의 MAX_SCORE(비빔 100 + 방향 바꾸기 30 + 빨리 다 비빔 20)와 같아야 한다.
 -- 팽이는 game-paengi/src/rules.ts의 MAX_SCORE(가장 빠른 회전 1800에서 쓰러질 때까지 25초, 0.1초당 1점)와 같아야 한다.
+-- 제기차기는 game-jegi/src/rules.ts의 MAX_SCORE(100번 모두 PERFECT, 10번마다 배율 +1)와 같아야 한다.
 -- 나머지 게임은 규칙이 정해지면 채운다(null이면 상한 검사를 하지 않는다).
 insert into public.games (slug, name, description, max_score) values
   ('tteokchigi', '떡치기', '떡메가 떡에 닿는 순간 탭', 642),
   ('dalgona', '달고나 뽑기', '점선을 따라 정확하게 그리기', 800),
   ('bubble-tea', '버블티 흔들기', '넘치지 않게 폰 흔들기', 150),
   ('jjajang', '짜장면 비비기', '원을 그리며 방향 바꿔 비비기', 150),
-  ('paengi', '팽이 돌리기', '빨리 돌리고 기울여서 오래 버티기', 250);
+  ('paengi', '팽이 돌리기', '빨리 돌리고 기울여서 오래 버티기', 250),
+  ('jegi', '제기차기', '제기가 발등에 닿는 순간 탭, 헛차면 끝', 1100);
