@@ -1,4 +1,4 @@
-import { Countdown, type MotionStatus } from '@minigames/engine';
+import { StartOverlay, type MotionStatus } from '@minigames/engine';
 import { useState, type ReactNode } from 'react';
 import { CLUMP_FROM_TURNS, DURATION_MS, SWITCH_MIN_TURNS } from './rules.ts';
 
@@ -45,41 +45,27 @@ export function ReadyField({
   return (
     <div className="jj-field">
       {children}
-      <div className="jj-overlay">
-        {isCounting ? (
-          <Countdown />
+      <StartOverlay isCounting={isCounting} notice={notice} onStart={onStart}>
+        {canTurnPhone ? (
+          <p className="mg-start-guide">
+            {SECONDS_TEXT} 동안 폰을 원 그리듯 돌려
+            <br />
+            짜장면을 비벼요! (화면에 그려도 돼요)
+          </p>
         ) : (
-          <>
-            {notice && (
-              <p className="jj-notice" role="status">
-                {notice}
-              </p>
-            )}
-            {canTurnPhone ? (
-              <p className="jj-guide">
-                {SECONDS_TEXT} 동안 폰을 원 그리듯 돌려
-                <br />
-                짜장면을 비벼요! (화면에 그려도 돼요)
-              </p>
-            ) : (
-              <p className="jj-guide">
-                {SECONDS_TEXT} 동안 그릇 위에 원을 그려
-                <br />
-                짜장면을 비벼요! (↑→↓← 키도 돼요)
-              </p>
-            )}
-            <p className="jj-rule">
-              한쪽으로 {SWITCH_MIN_TURNS}~{CLUMP_FROM_TURNS}바퀴 돌리고 <strong>반대로!</strong>
-              <br />
-              계속 한쪽으로만 돌리면 면이 뭉쳐요
-            </p>
-            {permissionNote && <p className="mg-muted">{permissionNote}</p>}
-            <button type="button" className="mg-button" onClick={onStart}>
-              시작
-            </button>
-          </>
+          <p className="mg-start-guide">
+            {SECONDS_TEXT} 동안 그릇 위에 원을 그려
+            <br />
+            짜장면을 비벼요! (↑→↓← 키도 돼요)
+          </p>
         )}
-      </div>
+        <p className="jj-rule">
+          한쪽으로 {SWITCH_MIN_TURNS}~{CLUMP_FROM_TURNS}바퀴 돌리고 <strong>반대로!</strong>
+          <br />
+          계속 한쪽으로만 돌리면 면이 뭉쳐요
+        </p>
+        {permissionNote && <p className="mg-muted">{permissionNote}</p>}
+      </StartOverlay>
     </div>
   );
 }

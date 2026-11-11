@@ -1,3 +1,4 @@
+import { artOf } from './art.ts';
 import type { Game } from './games.ts';
 
 /** 템플릿에서 게임 목록이 들어갈 자리 */
@@ -25,7 +26,7 @@ export interface RenderOptions {
 function cardBody(game: Game, playable: boolean): string {
   const suffix = playable ? '' : ' (준비 중)';
   return `
-  <span class="emoji" aria-hidden="true">${game.emoji}</span>
+  ${artOf(game)}
   <span><span class="name">${game.name}</span>${suffix}<br><span class="desc">${game.description}</span>
   <span class="best" data-best-slug="${game.slug}"></span></span>`;
 }

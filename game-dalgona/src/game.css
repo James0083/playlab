@@ -67,15 +67,25 @@
   font-weight: 700;
   color: var(--mg-accent);
 }
-.dg-shape svg {
-  width: 56px;
-  height: 56px;
+.dg-pick-defs {
+  position: absolute;
 }
+.dg-shape svg {
+  width: 68px;
+  height: 68px;
+  overflow: visible;
+}
+/* 카드 안 달고나 위에 눌러 찍힌 점선 모양(판 위 점선과 같은 색) */
 .dg-shape polyline {
   fill: none;
-  stroke: var(--mg-text);
-  stroke-width: 4;
+  stroke: var(--dg-line);
+  stroke-width: 2.6;
   stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 3 3;
+}
+.dg-shape[aria-disabled='true'] svg {
+  filter: grayscale(0.7);
 }
 .dg-shape-name {
   font-weight: 700;

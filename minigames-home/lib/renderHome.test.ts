@@ -51,3 +51,13 @@ test('404 페이지의 홈으로 링크가 경로 앞부분을 따른다', () =>
   assert.ok(notFound.includes(`href="${BASE_PATH_PLACEHOLDER}"`));
   assert.match(withBasePath(notFound, '/playlab/'), /href="\/playlab\/">홈으로/);
 });
+
+test('카드에 게임 그림(SVG)이 들어가고, 그림이 없는 게임은 이모지가 나온다', () => {
+  const html = renderHome(template, GAMES, { isPlayable: () => true });
+  assert.match(html, /<span class="art"><svg[^>]*>[\s\S]*?<\/svg><\/span>/);
+  const unknown = [{ ...GAMES[0], slug: 'unknown-game', emoji: '🎲' }];
+  assert.match(
+    renderHome(template, unknown, { isPlayable: () => true }),
+    /class="art emoji"[^>]*>🎲/,
+  );
+});

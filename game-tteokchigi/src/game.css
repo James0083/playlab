@@ -213,27 +213,9 @@
   }
 }
 
-/* 시작 화면·카운트다운: 장면 위에 안내와 버튼을 겹친다 */
-.tt-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  /* 끝까지 들어 올린 떡메(위)와 절구(아래) 사이 빈 공간에 놓는다. 360px 폭에서도 떡과 겹치지 않게 위로 붙인다 */
-  justify-content: flex-start;
-  padding-top: 38%;
-}
-.tt-guide {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--mg-bg) 85%, transparent);
-  text-align: center;
-  font-weight: 700;
-  line-height: 1.5;
+/* 시작 카드는 끝까지 들어 올린 떡메(위)와 절구(아래) 사이 빈 공간에 둔다 */
+.tt-field .mg-start-top {
+  padding-top: 30%;
 }
 
 /* 시작 화면 미리보기는 눌러도 반응하지 않는다 */

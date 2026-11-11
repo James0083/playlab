@@ -23,6 +23,17 @@ export function ShapePicker({ slug, shapes, unlockedCount, onSelect }: ShapePick
 
   return (
     <div className="dg-picker">
+      {/* 카드 6장이 함께 쓰는 달고나 판 그라데이션(판 그림 Candy.tsx와 같은 색) */}
+      <svg className="dg-pick-defs" width="0" height="0" aria-hidden="true">
+        <defs>
+          <radialGradient id="dg-pick-dome" cx="42%" cy="38%" r="65%">
+            <stop offset="0%" stopColor="var(--dg-candy-light)" />
+            <stop offset="60%" stopColor="var(--dg-candy)" />
+            <stop offset="92%" stopColor="var(--dg-candy-edge)" />
+            <stop offset="100%" stopColor="var(--dg-candy-rim)" />
+          </radialGradient>
+        </defs>
+      </svg>
       <p className="mg-muted">
         점선을 따라 정확하게 그릴수록 점수가 높아요. 선을 벗어나면 금이 가요(3번이면 끝).
       </p>
@@ -45,6 +56,8 @@ export function ShapePicker({ slug, shapes, unlockedCount, onSelect }: ShapePick
                 }
               >
                 <svg viewBox="0 0 100 100" aria-hidden="true">
+                  <circle cx={52} cy={54} r={46} fill="#000" opacity={0.18} />
+                  <circle cx={50} cy={50} r={46} fill="url(#dg-pick-dome)" />
                   {shape.strokes.map((stroke, j) => (
                     <polyline key={j} points={formatPoints(stroke)} />
                   ))}

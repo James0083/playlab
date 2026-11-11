@@ -1,5 +1,4 @@
 import {
-  Countdown,
   createGameClock,
   createSoundBus,
   GameShell,
@@ -7,6 +6,7 @@ import {
   backGoesHome,
   goHome,
   ScoreResult,
+  StartOverlay,
   unlockAudio,
   useGameSession,
   useHaptics,
@@ -146,22 +146,14 @@ export function TteokchigiGame() {
       {(phase === 'idle' || phase === 'countdown') && (
         <div className="tt-field">
           <Scene elementsRef={fieldElements} hitId={null} restHeight={PREVIEW_MALLET_HEIGHT} />
-          <div className="tt-overlay">
-            {phase === 'idle' ? (
-              <>
-                <p className="tt-guide">
-                  떡메가 떡에 닿는 순간 탭!
-                  <br />
-                  북이 “동” 울릴 때예요.
-                </p>
-                <button type="button" className="mg-button" onClick={handleStart}>
-                  시작
-                </button>
-              </>
-            ) : (
-              <Countdown />
-            )}
-          </div>
+          {/* 끝까지 들어 올린 떡메(위)와 절구(아래) 사이에 카드를 둔다 */}
+          <StartOverlay isCounting={phase === 'countdown'} align="top" onStart={handleStart}>
+            <p className="mg-start-guide">
+              떡메가 떡에 닿는 순간 탭!
+              <br />
+              북이 “동” 울릴 때예요.
+            </p>
+          </StartOverlay>
         </div>
       )}
       {phase === 'playing' && (

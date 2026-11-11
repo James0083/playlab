@@ -1,6 +1,6 @@
+import { keyTurns, pointerTurns, ROTATE_KEYS } from '@minigames/engine';
 import { useRef, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import type { InputMode } from './ResultStats.tsx';
-import { keyTurns, pointerTurns, ROTATE_KEYS } from './rules.ts';
 
 /** 그릇 그림(viewBox 240) 기준으로 가운데에서 이보다 가까운 곳은 돈 각도를 재지 않는다 */
 const MIN_RADIUS_IN_VIEWBOX = 28;

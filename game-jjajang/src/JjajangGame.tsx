@@ -2,7 +2,10 @@ import {
   GameShell,
   backGoesHome,
   goHome,
+  motionReadingOf,
+  motionTurns,
   ScoreResult,
+  startMotionTracker,
   unlockAudio,
   useDeviceMotion,
   useGameSession,
@@ -21,8 +24,6 @@ import {
   finalResult,
   MAX_BONUS_SWITCHES,
   mixRatio,
-  motionTurns,
-  startMotionTracker,
   startStir,
   strokeZone,
   SWITCH_POINTS,
@@ -139,11 +140,7 @@ export function JjajangGame() {
       return;
     }
     if (inputMode !== 'motion') return;
-    const measured = motionTurns(tracker.current, {
-      atMs: sample.timestamp,
-      linearAcceleration: sample.linearAcceleration,
-      spinRate: sample.rotationRate?.alpha ?? null,
-    });
+    const measured = motionTurns(tracker.current, motionReadingOf(sample));
     tracker.current = measured.tracker;
     if (measured.turns !== 0) addTurn(performance.now(), measured.turns);
   };

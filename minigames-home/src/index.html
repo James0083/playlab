@@ -52,9 +52,9 @@
       }
       .card {
         display: flex;
-        gap: 12px;
+        gap: 14px;
         align-items: center;
-        padding: 16px;
+        padding: 12px 16px 12px 12px;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -63,6 +63,21 @@
       }
       .card[aria-disabled='true'] {
         opacity: 0.6;
+      }
+      /* 게임 그림(lib/art.ts의 SVG). 그림이 없는 게임은 이모지 */
+      .art {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        background: var(--bg);
+      }
+      .art svg {
+        width: 56px;
+        height: 56px;
       }
       .emoji {
         font-size: 32px;

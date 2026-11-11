@@ -1,4 +1,5 @@
-import type { CSSProperties, RefObject } from 'react';
+import { Meter } from '@minigames/engine';
+import type { RefObject } from 'react';
 import {
   MAX_INTENSITY,
   SECONDS,
@@ -34,8 +35,13 @@ export interface HudFrame {
 
 /** 세기 게이지에서 적정 구간이 시작하는 세기. 이보다 약하면 1초 구간이 '약함'이 되기 쉽다 */
 const GOOD_FROM = 9;
-/** 세기 게이지 색 띠의 경계(%). CSS 변수로 넘겨 그라데이션을 그린다 */
-const toPercent = (value: number) => `${(value / MAX_INTENSITY) * 100}%`;
+/** 세기 게이지 색 띠: 약함(회색) → 적정(초록) → 경고(노랑) → 넘침(빨강). 경계는 규칙 값 */
+const INTENSITY_BANDS = [
+  { from: 0, color: 'var(--mg-border)' },
+  { from: GOOD_FROM / MAX_INTENSITY, color: 'var(--bt-good)' },
+  { from: WARNING_ENVELOPE / MAX_INTENSITY, color: 'var(--bt-strong)' },
+  { from: SPILL_ENVELOPE / MAX_INTENSITY, color: 'var(--mg-danger)' },
+];
 
 export function drawHud(elements: HudElements, { mix, envelope, ratings }: HudFrame): void {
   const percent = `${Math.floor(mix * 100)}%`;
@@ -58,46 +64,23 @@ export function drawHud(elements: HudElements, { mix, envelope, ratings }: HudFr
 export function HudTop({ elementsRef }: { elementsRef: RefObject<HudElements> }) {
   return (
     <span className="bt-hud" aria-hidden="true">
-      <span className="bt-meter">
-        <span className="bt-meter-label">섞임</span>
-        <span className="bt-meter-track">
-          <span
-            ref={(node) => {
-              elementsRef.current.meterFill = node;
-            }}
-            className="bt-meter-fill"
-          />
-        </span>
-        <span
-          ref={(node) => {
-            elementsRef.current.meterText = node;
-          }}
-          className="bt-meter-text"
-        >
-          0%
-        </span>
-      </span>
-      <span className="bt-meter">
-        <span className="bt-meter-label">세기</span>
-        <span
-          className="bt-intensity-track"
-          style={
-            {
-              '--bt-good-at': toPercent(GOOD_FROM),
-              '--bt-warn-at': toPercent(WARNING_ENVELOPE),
-              '--bt-spill-at': toPercent(SPILL_ENVELOPE),
-            } as CSSProperties
-          }
-        >
-          <span
-            ref={(node) => {
-              elementsRef.current.intensityMarker = node;
-            }}
-            className="bt-intensity-marker"
-          />
-        </span>
-        <span className="bt-meter-text" />
-      </span>
+      <Meter
+        label="섞임"
+        defaultValue="0%"
+        fillRef={(node) => {
+          elementsRef.current.meterFill = node;
+        }}
+        valueRef={(node) => {
+          elementsRef.current.meterText = node;
+        }}
+      />
+      <Meter
+        label="세기"
+        bands={INTENSITY_BANDS}
+        markerRef={(node) => {
+          elementsRef.current.intensityMarker = node;
+        }}
+      />
       <span className="bt-dots">
         {Array.from({ length: SECONDS }, (_, i) => (
           <span

@@ -1,4 +1,5 @@
-import type { CSSProperties, RefObject } from 'react';
+import { Meter } from '@minigames/engine';
+import type { RefObject } from 'react';
 import {
   CLUMP_FROM_TURNS,
   MAX_BONUS_SWITCHES,
@@ -43,7 +44,12 @@ export interface HudFrame {
 
 /** 한 방향 게이지 끝(바퀴). 뭉치는 구간이 보일 만큼 */
 const STROKE_GAUGE_TURNS = 3;
-const toPercent = (turns: number) => `${(turns / STROKE_GAUGE_TURNS) * 100}%`;
+/** 한쪽 게이지 색 띠: 짧음(회색) → 바꾸기 좋음(초록) → 뭉침(빨강). 경계는 규칙 값 */
+const STROKE_BANDS = [
+  { from: 0, color: 'var(--mg-border)' },
+  { from: SWITCH_MIN_TURNS / STROKE_GAUGE_TURNS, color: 'var(--jj-good)' },
+  { from: CLUMP_FROM_TURNS / STROKE_GAUGE_TURNS, color: 'var(--mg-danger)' },
+];
 const DIRECTION_ICONS: Record<Direction, string> = { 1: '↻', [-1]: '↺' };
 
 /** 글자가 바뀐 경우에만 고친다(매 프레임 같은 글자를 다시 쓰지 않게) */
@@ -74,52 +80,27 @@ export function drawHud(elements: HudElements, { mix, stroke, zone, switches }: 
 export function HudTop({ elementsRef }: { elementsRef: RefObject<HudElements> }) {
   return (
     <span className="jj-hud" aria-hidden="true">
-      <span className="jj-meter">
-        <span className="jj-meter-label">비빔</span>
-        <span className="jj-meter-track">
-          <span
-            ref={(node) => {
-              elementsRef.current.mixFill = node;
-            }}
-            className="jj-meter-fill"
-          />
-        </span>
-        <span
-          ref={(node) => {
-            elementsRef.current.mixText = node;
-          }}
-          className="jj-meter-text"
-        >
-          0%
-        </span>
-      </span>
-      <span className="jj-meter">
-        <span className="jj-meter-label">한쪽</span>
-        <span
-          className="jj-stroke-track"
-          style={
-            {
-              '--jj-good-at': toPercent(SWITCH_MIN_TURNS),
-              '--jj-clump-at': toPercent(CLUMP_FROM_TURNS),
-            } as CSSProperties
-          }
-        >
-          <span
-            ref={(node) => {
-              elementsRef.current.strokeMarker = node;
-            }}
-            className="jj-stroke-marker"
-          />
-        </span>
-        <span
-          ref={(node) => {
-            elementsRef.current.strokeText = node;
-          }}
-          className="jj-meter-text"
-        >
-          –
-        </span>
-      </span>
+      <Meter
+        label="비빔"
+        defaultValue="0%"
+        fillRef={(node) => {
+          elementsRef.current.mixFill = node;
+        }}
+        valueRef={(node) => {
+          elementsRef.current.mixText = node;
+        }}
+      />
+      <Meter
+        label="한쪽"
+        defaultValue="–"
+        bands={STROKE_BANDS}
+        markerRef={(node) => {
+          elementsRef.current.strokeMarker = node;
+        }}
+        valueRef={(node) => {
+          elementsRef.current.strokeText = node;
+        }}
+      />
       <span className="jj-pips">
         <span className="jj-pips-label">방향 바꾸기</span>
         {Array.from({ length: MAX_BONUS_SWITCHES }, (_, i) => (

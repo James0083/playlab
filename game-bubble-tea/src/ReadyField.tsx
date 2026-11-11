@@ -1,4 +1,4 @@
-import { Countdown, type MotionStatus } from '@minigames/engine';
+import { StartOverlay, type MotionStatus } from '@minigames/engine';
 import { useState, type ReactNode } from 'react';
 import { DURATION_MS } from './rules.ts';
 
@@ -45,37 +45,23 @@ export function ReadyField({
   return (
     <div className="bt-field">
       {children}
-      <div className="bt-overlay">
-        {isCounting ? (
-          <Countdown />
+      <StartOverlay isCounting={isCounting} notice={notice} onStart={onStart}>
+        {canShakePhone ? (
+          <p className="mg-start-guide">
+            {SECONDS_TEXT} 동안 폰을 흔들어 섞어요!
+            <br />
+            세게 흔들면 넘쳐요.
+          </p>
         ) : (
-          <>
-            {notice && (
-              <p className="bt-notice" role="status">
-                {notice}
-              </p>
-            )}
-            {canShakePhone ? (
-              <p className="bt-guide">
-                {SECONDS_TEXT} 동안 폰을 흔들어 섞어요!
-                <br />
-                세게 흔들면 넘쳐요.
-              </p>
-            ) : (
-              <p className="bt-guide">
-                {SECONDS_TEXT} 동안 컵을 누른 채
-                <br />
-                좌우로 문질러 섞어요! (←→ 키도 돼요)
-              </p>
-            )}
-            <p className="mg-muted">소리를 켜면 넘치기 전에 알려 줘요 🔊</p>
-            {permissionNote && <p className="mg-muted">{permissionNote}</p>}
-            <button type="button" className="mg-button" onClick={onStart}>
-              시작
-            </button>
-          </>
+          <p className="mg-start-guide">
+            {SECONDS_TEXT} 동안 컵을 누른 채
+            <br />
+            좌우로 문질러 섞어요! (←→ 키도 돼요)
+          </p>
         )}
-      </div>
+        <p className="mg-muted">소리를 켜면 넘치기 전에 알려 줘요 🔊</p>
+        {permissionNote && <p className="mg-muted">{permissionNote}</p>}
+      </StartOverlay>
     </div>
   );
 }

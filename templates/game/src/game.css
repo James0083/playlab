@@ -19,18 +19,6 @@
   user-select: none;
   -webkit-user-select: none;
 }
-.tp-overlay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.tp-guide {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-}
 .tp-target {
   font-size: 48px;
   font-weight: 800;

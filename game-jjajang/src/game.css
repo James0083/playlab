@@ -4,11 +4,16 @@
   /* 한쪽으로 돌린 구간 색: 바꾸기 좋음(초록)·뭉침(빨강은 --mg-danger). 짧음은 --mg-border */
   --jj-good: #2e9d5b;
   --jj-bonus: #e0a21b;
+  /* 장면: 중국집 체크무늬 식탁보 */
+  --jj-cloth: #fbf0e2;
+  --jj-check: rgb(190 60 40 / 0.07);
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --jj-good: #4cc982;
     --jj-bonus: #f2bd45;
+    --jj-cloth: #33281f;
+    --jj-check: rgb(230 110 80 / 0.1);
   }
 }
 
@@ -28,9 +33,11 @@ body {
   height: 66vh;
   min-height: 420px;
   padding: 12px 0 0;
-  border: 1px solid var(--mg-border);
+  border: 0;
   border-radius: 16px;
-  background: var(--mg-surface);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 20px, var(--jj-check) 20px 24px),
+    repeating-linear-gradient(90deg, transparent 0 20px, var(--jj-check) 20px 24px), var(--jj-cloth);
   color: inherit;
   font: inherit;
   overflow: hidden;
@@ -52,38 +59,12 @@ body {
 .jj-field-playing:active {
   cursor: grabbing;
 }
-.jj-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px;
-  /* 그릇이 비쳐 보이면서도 글자가 읽히도록 반투명 바탕을 깐다 */
-  background: color-mix(in srgb, var(--mg-surface) 76%, transparent);
-}
-.jj-guide {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-}
 .jj-rule {
   margin: 0;
   padding: 8px 14px;
   border-radius: 12px;
   background: var(--mg-bg);
   font-size: 14px;
-  text-align: center;
-}
-.jj-notice {
-  margin: 0;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: var(--mg-bg);
-  font-weight: 700;
   text-align: center;
 }
 .jj-hint {
@@ -115,6 +96,14 @@ body {
   overflow: visible;
 }
 
+/* 시작 화면: 시작 카드가 그릇 아랫부분을 가리지 않도록 그릇을 위로 올린다 */
+.jj-field:not(.jj-field-playing) .jj-bowl-wrap {
+  padding-bottom: 170px;
+}
+/* 시작 화면에서는 게이지가 모두 0이라 숨기고 그릇만 보여준다(자리는 유지) */
+.jj-field:not(.jj-field-playing) .jj-hud {
+  visibility: hidden;
+}
 /* 그릇 위 안내: 비빔 게이지, 한쪽 게이지, 방향 바꾸기 칸 */
 .jj-hud {
   display: flex;
@@ -122,64 +111,6 @@ body {
   align-items: center;
   gap: 6px;
   width: min(300px, 86%);
-}
-.jj-meter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  font-size: 14px;
-  font-weight: 700;
-}
-.jj-meter-label {
-  width: 2.5em;
-}
-.jj-meter-track,
-.jj-stroke-track {
-  position: relative;
-  flex: 1;
-  height: 10px;
-  border-radius: 5px;
-  background: var(--mg-border);
-  overflow: hidden;
-}
-.jj-meter-fill {
-  display: block;
-  height: 100%;
-  background: var(--mg-accent);
-  transform: scaleX(0);
-  transform-origin: left;
-}
-/* 한쪽 게이지 띠: 짧음(회색) → 바꾸기 좋음(초록) → 뭉침(빨강). 경계는 Hud.tsx가 규칙 값으로 넘긴다 */
-.jj-stroke-track {
-  overflow: visible;
-  background: linear-gradient(
-    to right,
-    var(--mg-border) var(--jj-good-at),
-    var(--jj-good) var(--jj-good-at) var(--jj-clump-at),
-    var(--mg-danger) var(--jj-clump-at)
-  );
-}
-/* 바늘: 트랙 전체 폭을 기준으로 translateX(%)로 움직이도록 트랙과 같은 폭의 상자 안에 둔다 */
-.jj-stroke-marker {
-  position: absolute;
-  inset: -4px 0;
-  transform: translateX(0);
-}
-.jj-stroke-marker::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -2px;
-  width: 4px;
-  border-radius: 2px;
-  background: var(--mg-text);
-}
-.jj-meter-text {
-  min-width: 3.5em;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
 }
 .jj-pips {
   display: flex;

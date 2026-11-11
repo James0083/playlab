@@ -1,11 +1,11 @@
 import {
-  Countdown,
   createGameClock,
   GameShell,
   getAudioContext,
   backGoesHome,
   goHome,
   ScoreResult,
+  StartOverlay,
   unlockAudio,
   useGameSession,
   useHaptics,
@@ -85,18 +85,10 @@ export function TemplateGame() {
     >
       {(phase === 'idle' || phase === 'countdown') && (
         <div className="tp-field">
-          <div className="tp-overlay">
-            {phase === 'idle' ? (
-              <>
-                <p className="tp-guide">{DURATION_MS / 1_000}초 동안 최대한 많이 탭!</p>
-                <button type="button" className="mg-button" onClick={handleStart}>
-                  시작
-                </button>
-              </>
-            ) : (
-              <Countdown />
-            )}
-          </div>
+          {/* 시작 화면: 엔진 공통 카드. 그림이 있으면 카드 뒤에 보인다 */}
+          <StartOverlay isCounting={phase === 'countdown'} align="center" onStart={handleStart}>
+            <p className="mg-start-guide">{DURATION_MS / 1_000}초 동안 최대한 많이 탭!</p>
+          </StartOverlay>
         </div>
       )}
       {phase === 'playing' && (

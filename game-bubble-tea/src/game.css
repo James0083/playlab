@@ -4,11 +4,18 @@
   /* 1초 구간 평가 색: 적정(초록)·셈(노랑). 약함은 --mg-border, 넘침은 --mg-danger */
   --bt-good: #2e9d5b;
   --bt-strong: #e0a21b;
+  /* 장면: 밝은 벽과 나무 카운터 */
+  --bt-wall: #fff6ea;
+  --bt-counter: #e9cfae;
+  --bt-counter-edge: #cfae84;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bt-good: #4cc982;
     --bt-strong: #f2bd45;
+    --bt-wall: #332a20;
+    --bt-counter: #4a3826;
+    --bt-counter-edge: #5e4731;
   }
 }
 
@@ -28,9 +35,16 @@ body {
   height: 66vh;
   min-height: 400px;
   padding: 12px 0 0;
-  border: 1px solid var(--mg-border);
+  border: 0;
   border-radius: 16px;
-  background: var(--mg-surface);
+  background: linear-gradient(
+    to bottom,
+    var(--bt-wall) 0%,
+    var(--bt-wall) 66%,
+    var(--bt-counter-edge) 66%,
+    var(--bt-counter) 68%,
+    var(--bt-counter) 100%
+  );
   color: inherit;
   font: inherit;
   overflow: hidden;
@@ -51,32 +65,6 @@ body {
 }
 .bt-field-playing:active {
   cursor: grabbing;
-}
-.bt-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px;
-  /* 컵이 비쳐 보이면서도 글자가 읽히도록 반투명 바탕을 깐다 */
-  background: color-mix(in srgb, var(--mg-surface) 72%, transparent);
-}
-.bt-guide {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-}
-.bt-notice {
-  margin: 0;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: var(--mg-bg);
-  font-weight: 700;
-  text-align: center;
 }
 .bt-hint {
   color: var(--mg-muted);
@@ -107,6 +95,14 @@ body {
   overflow: visible;
 }
 
+/* 시작 화면: 시작 카드가 컵 아랫부분을 가리지 않도록 컵을 위로 올린다 */
+.bt-field:not(.bt-field-playing) .bt-cup-wrap {
+  padding-bottom: 150px;
+}
+/* 시작 화면에서는 게이지가 모두 0이라 숨기고 컵만 보여준다(자리는 유지) */
+.bt-field:not(.bt-field-playing) .bt-hud {
+  visibility: hidden;
+}
 /* 컵 위 안내: 섞임·세기 게이지와 1초 점 10개 */
 .bt-hud {
   display: flex;
@@ -114,65 +110,6 @@ body {
   align-items: center;
   gap: 6px;
   width: min(300px, 86%);
-}
-.bt-meter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  font-size: 14px;
-  font-weight: 700;
-}
-.bt-meter-label {
-  width: 2.5em;
-}
-.bt-meter-track,
-.bt-intensity-track {
-  position: relative;
-  flex: 1;
-  height: 10px;
-  border-radius: 5px;
-  background: var(--mg-border);
-  overflow: hidden;
-}
-.bt-meter-fill {
-  display: block;
-  height: 100%;
-  background: var(--mg-accent);
-  transform: scaleX(0);
-  transform-origin: left;
-}
-/* 세기 게이지 띠: 약함(회색) → 적정(초록) → 경고(노랑) → 넘침(빨강). 경계는 Hud.tsx가 규칙 값으로 넘긴다 */
-.bt-intensity-track {
-  overflow: visible;
-  background: linear-gradient(
-    to right,
-    var(--mg-border) var(--bt-good-at),
-    var(--bt-good) var(--bt-good-at) var(--bt-warn-at),
-    var(--bt-strong) var(--bt-warn-at) var(--bt-spill-at),
-    var(--mg-danger) var(--bt-spill-at)
-  );
-}
-/* 바늘: 트랙 전체 폭을 기준으로 translateX(%)로 움직이도록 트랙과 같은 폭의 상자 안에 둔다 */
-.bt-intensity-marker {
-  position: absolute;
-  inset: -4px 0;
-  transform: translateX(0);
-}
-.bt-intensity-marker::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -2px;
-  width: 4px;
-  border-radius: 2px;
-  background: var(--mg-text);
-}
-.bt-meter-text {
-  min-width: 3.5em;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
 }
 .bt-dots {
   display: flex;
