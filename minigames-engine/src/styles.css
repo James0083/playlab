@@ -38,6 +38,9 @@ body {
     -apple-system,
     'Apple SD Gothic Neo',
     sans-serif;
+  /* 한국어가 단어 중간에서 줄바꿈되지 않게 한다 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .mg-shell {
   display: flex;
@@ -110,6 +113,115 @@ body {
   background: var(--mg-surface);
   color: var(--mg-text);
   border: 1px solid var(--mg-border);
+}
+/* 시작 화면: 장면 위에 안내 카드를 겹친다. 그림은 그대로 보이고 카드에만 반투명 바탕을 깐다 */
+.mg-start {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px;
+  pointer-events: none;
+}
+.mg-start-center {
+  justify-content: center;
+}
+.mg-start-top {
+  justify-content: flex-start;
+}
+.mg-start-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 340px);
+  padding: 16px;
+  border: 1px solid var(--mg-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--mg-surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  text-align: center;
+  pointer-events: auto;
+}
+.mg-start-guide {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.mg-notice {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--mg-bg);
+  font-weight: 700;
+}
+/* 시작처럼 화면의 주 행동 버튼은 넓게 */
+.mg-button-wide {
+  min-width: 200px;
+  font-size: 17px;
+}
+/* 플레이 중 게이지 한 줄: 이름 · 막대 · 값 (Meter 컴포넌트) */
+.mg-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+}
+.mg-meter-label {
+  width: 2.5em;
+}
+.mg-meter-track {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--mg-border);
+  overflow: hidden;
+}
+/* 바늘 게이지는 바늘이 막대 위아래로 나와야 해서 잘라내지 않는다 */
+.mg-meter-track-bands {
+  overflow: visible;
+}
+.mg-meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--mg-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+/* 바늘: 트랙 전체 폭을 기준으로 translateX(%)로 움직이도록 트랙과 같은 폭의 상자 안에 둔다 */
+.mg-meter-marker {
+  position: absolute;
+  inset: -4px 0;
+  transform: translateX(0);
+}
+.mg-meter-marker::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--mg-text);
+}
+.mg-meter-value {
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 3.5em;
+  font-variant-numeric: tabular-nums;
+}
+.mg-meter-unit {
+  color: var(--mg-muted);
+  font-size: 12px;
 }
 .mg-result {
   width: 100%;

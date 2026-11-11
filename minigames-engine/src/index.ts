@@ -7,6 +7,9 @@ export { useHaptics } from './hooks/useHaptics.ts';
 
 export { GameShell } from './components/GameShell.tsx';
 export { Countdown } from './components/Countdown.tsx';
+export { StartOverlay } from './components/StartOverlay.tsx';
+export { Meter } from './components/Meter.tsx';
+export type { MeterBand } from './components/Meter.tsx';
 export { ScoreResult } from './components/ScoreResult.tsx';
 
 export {
@@ -21,6 +24,15 @@ export { createGameClock } from './lib/clock.ts';
 export type { AudioTimeSource, GameClock } from './lib/clock.ts';
 export { readStorage, writeStorage } from './lib/storage.ts';
 export { backGoesHome, goHome } from './lib/navigation.ts';
+export {
+  keyTurns,
+  motionReadingOf,
+  motionTurns,
+  pointerTurns,
+  ROTATE_KEYS,
+  startMotionTracker,
+} from './lib/rotation.ts';
+export type { MotionReading, MotionTracker } from './lib/rotation.ts';
 
 export { configureSupabase } from './lib/supabase.ts';
 export { getLocalBest } from './lib/score.ts';
